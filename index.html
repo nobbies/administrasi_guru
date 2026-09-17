@@ -131,6 +131,12 @@
                 </div>
                 
                 <div class="flex items-center space-x-3">
+                    <!-- TOMBOL CLOUD SHEETS YANG DITAMBAHKAN -->
+                    <button onclick="configCloudSheets()" class="flex items-center space-x-2 px-3 py-1.5 text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-lg transition border border-emerald-200 dark:border-emerald-800">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>🔗 Cloud Sheets</span>
+                    </button>
+
                     <button onclick="toggleTheme()" class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Ganti Tema">
                         <i id="theme-icon" class="fa-solid fa-moon"></i>
                     </button>
@@ -619,10 +625,9 @@
                 <button onclick="closeBatchPhotoModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="space-y-4">
-                <!-- Opsi A: Upload File ZIP -->
                 <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300"><i class="fa-solid fa-file-zipper text-purple-600 mr-1"></i> Opsi 1: Upload File ZIP Foto Siswa</label>
-                    <p class="text-[11px] text-slate-500">File di dalam ZIP harus dinamai sesuai NIS siswa (Contoh: <code class="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded">1001.jpg</code>, <code class="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded">1002.png</code>).</p>
+                    <p class="text-[11px] text-slate-500">File di dalam ZIP harus dinamai sesuai NIS siswa (Contoh: <code class="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded">1001.jpg</code>).</p>
                     <input type="file" id="zip-file-input" accept=".zip" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
                     <button type="button" onclick="processZipPhoto()" class="w-full mt-2 py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold shadow transition">Proses Import ZIP Foto</button>
                 </div>
@@ -633,7 +638,6 @@
                     <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
                 </div>
 
-                <!-- Opsi B: Batch Teks URL -->
                 <div class="space-y-2">
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300"><i class="fa-solid fa-link text-brand-600 mr-1"></i> Opsi 2: Batch URL Foto (NIS, URL)</label>
                     <textarea id="batch-photo-text" rows="3" placeholder="1001, https://images.unsplash.com/...&#10;1002, https://images.unsplash.com/..." class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 font-mono"></textarea>
@@ -670,7 +674,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Atau Copy-Paste Data (Format: No. Absen, NIS, Nama Siswa, Kelas)</label>
-                    <textarea id="import-text-area" rows="4" placeholder="1, 1001, Ahmad Faza, X Informatika&#10;2, 1002, Bella Safitri, X Informatika" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 font-mono"></textarea>
+                    <textarea id="import-text-area" rows="4" placeholder="1, 33197, ALLUNA MAURENTS, X TKJ 1" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 font-mono"></textarea>
                 </div>
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl text-xs text-blue-700 dark:text-blue-300 flex items-center justify-between">
                     <span>Butuh contoh format file?</span>
@@ -724,7 +728,7 @@
                 <input type="hidden" id="kelas-id">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Nama Kelas</label>
-                    <input type="text" id="kelas-nama" required placeholder="Contoh: X TKJ 1 / Informatika X" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    <input type="text" id="kelas-nama" required placeholder="Contoh: X TKJ 1" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Tingkat / Fase</label>
@@ -732,7 +736,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Wali Kelas</label>
-                    <input type="text" id="kelas-wali" required placeholder="Contoh: Nama Wali Kelas, S.Pd." class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    <input type="text" id="kelas-wali" required placeholder="Contoh: Budi Santoso, S.Kom." class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500">
                 </div>
                 <div class="flex justify-end space-x-3 pt-3">
                     <button type="button" onclick="closeKelasModal()" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl">Batal</button>
@@ -884,16 +888,16 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">NIS</label>
-                        <input type="text" id="siswa-nis" required placeholder="Contoh: 1001" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500">
+                        <input type="text" id="siswa-nis" required placeholder="Contoh: 33197" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Nama Lengkap Siswa</label>
-                    <input type="text" id="siswa-nama" required placeholder="Contoh: Ahmad Faza" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    <input type="text" id="siswa-nama" required placeholder="Contoh: ALLUNA MAURENTS" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">URL Foto Siswa (Opsional)</label>
-                    <input type="url" id="siswa-foto" placeholder="https://images.unsplash.com/... atau URL foto" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    <input type="url" id="siswa-foto" placeholder="https://images.unsplash.com/..." class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500">
                 </div>
                 <div class="grid grid-cols-3 gap-2">
                     <div>
@@ -946,7 +950,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Keterangan / Indikator Soal</label>
-                    <textarea id="eval-ket" required rows="2" placeholder="Bentuk soal pilihan ganda 10 nomor, esai 2 nomor..." class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500"></textarea>
+                    <textarea id="eval-ket" required rows="2" placeholder="Bentuk soal pilihan ganda 10 nomor..." class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500"></textarea>
                 </div>
                 <div class="flex justify-end space-x-3 pt-3">
                     <button type="button" onclick="closeEvaluasiModal()" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl">Batal</button>
@@ -965,7 +969,8 @@
             jobsheet: JSON.parse(localStorage.getItem('admin_jobsheet')) || [],
             jurnal: JSON.parse(localStorage.getItem('admin_jurnal')) || [],
             absensi: JSON.parse(localStorage.getItem('admin_absensi')) || {},
-            evaluasi: JSON.parse(localStorage.getItem('admin_evaluasi')) || []
+            evaluasi: JSON.parse(localStorage.getItem('admin_evaluasi')) || [],
+            cloudUrl: localStorage.getItem('admin_cloud_url') || ''
         };
 
         function saveState() {
@@ -979,6 +984,64 @@
             localStorage.setItem('admin_evaluasi', JSON.stringify(state.evaluasi));
             updateStats();
             populateDropdowns();
+            syncToCloud();
+        }
+
+        // --- CLOUD GOOGLE SHEETS SYNC ---
+        function configCloudSheets() {
+            const currentUrl = localStorage.getItem('admin_cloud_url') || '';
+            const newUrl = prompt("Masukkan URL Web App Google Apps Script Anda (berakhiran /exec):", currentUrl);
+            if (newUrl !== null) {
+                localStorage.setItem('admin_cloud_url', newUrl.trim());
+                state.cloudUrl = newUrl.trim();
+                if (newUrl.trim()) {
+                    alert('URL Google Sheets berhasil disimpan! Menyinkronkan data...');
+                    fetchFromCloud();
+                } else {
+                    alert('Koneksi Cloud Google Sheets dinonaktifkan.');
+                }
+            }
+        }
+
+        async function syncToCloud() {
+            const url = state.cloudUrl;
+            if (!url) return;
+            try {
+                // Background sync
+                fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'saveAll', state: state })
+                });
+            } catch (err) {
+                console.error("Cloud sync error:", err);
+            }
+        }
+
+        async function fetchFromCloud() {
+            const url = state.cloudUrl;
+            if (!url) return;
+            try {
+                const res = await fetch(url + '?action=getData');
+                const cloudData = await res.json();
+                if (cloudData && cloudData.mapel) {
+                    state = cloudData;
+                    localStorage.setItem('admin_mapel', JSON.stringify(state.mapel));
+                    localStorage.setItem('admin_kelas', JSON.stringify(state.kelas));
+                    localStorage.setItem('admin_siswa', JSON.stringify(state.siswa));
+                    localStorage.setItem('admin_modul', JSON.stringify(state.modul));
+                    localStorage.setItem('admin_jobsheet', JSON.stringify(state.jobsheet));
+                    localStorage.setItem('admin_jurnal', JSON.stringify(state.jurnal));
+                    localStorage.setItem('admin_absensi', JSON.stringify(state.absensi));
+                    localStorage.setItem('admin_evaluasi', JSON.stringify(state.evaluasi));
+                    refreshAllViews();
+                    alert('Data berhasil disinkronkan dari Google Sheets!');
+                }
+            } catch (err) {
+                console.error("Fetch from cloud error:", err);
+                alert('Gagal mengambil data dari Google Sheets. Periksa kembali URL Web App.');
+            }
         }
 
         function loadSampleData() {
@@ -1153,7 +1216,7 @@
         // --- BATCH PHOTO & ZIP IMPORT FUNCTIONS ---
         function openBatchPhotoModal() {
             document.getElementById('modal-batch-photo').classList.remove('hidden');
-            let sampleText = "1001, https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150\n1002, https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150";
+            let sampleText = "33197, https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150\n33198, https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150";
             document.getElementById('batch-photo-text').value = sampleText;
             document.getElementById('zip-file-input').value = '';
         }
@@ -2206,6 +2269,9 @@
                 loadSampleData();
             } else {
                 refreshAllViews();
+            }
+            if (state.cloudUrl) {
+                fetchFromCloud();
             }
         };
     </script>
