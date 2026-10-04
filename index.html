@@ -3,340 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrasi Guru Modern</title>
+    <title>Administrasi Guru Terpadu</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #0f766e; --primary-hover: #0d9488;
-            --bg-color: #f8fafc; --surface: #ffffff;
-            --text-main: #0f172a; --text-muted: #64748b;
-            --border: #e2e8f0; --shadow: 0 4px 20px rgba(0,0,0,0.05);
-            --radius: 16px;
-        }
+        :root { --primary: #0f766e; --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --muted: #64748b; --border: #e2e8f0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        /* Sidebar Kanan */
+        .sidebar { width: 260px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; box-shadow: -4px 0 15px rgba(0,0,0,0.03); z-index: 10; }
+        .nav-group { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 20px 0 10px 10px; font-weight: 700; }
+        .nav-item { padding: 12px 15px; margin-bottom: 5px; border-radius: 10px; cursor: pointer; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .nav-item:hover { background: var(--bg); color: var(--primary); }
+        .nav-item.active { background: var(--primary); color: white; }
         
-        /* Loading Overlay */
-        #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; font-weight: 600; display: none; }
-        .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;}
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Login Screen */
-        #login-screen { position: absolute; inset: 0; background: var(--bg-color); z-index: 1000; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: var(--surface); padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow); width: 320px; text-align: center; }
-        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-family: inherit; }
-        .btn { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; font-family: inherit; }
-        .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
-
-        /* App Layout: Content (Kiri) + Sidebar (Kanan) */
-        #app-screen { display: none; width: 100%; height: 100%; display: flex; flex-direction: row; }
-        
-        /* Area Konten Utama (Kiri) */
-        .main-content { flex: 1; padding: 40px; overflow-y: auto; position: relative; }
-        .section { display: none; animation: fadeIn 0.4s ease forwards; }
+        /* Konten Kiri */
+        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
+        .section { display: none; animation: fadeIn 0.3s ease; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Sidebar Navigasi (Kanan) */
-        .sidebar { width: 260px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 30px 20px; box-shadow: -4px 0 15px rgba(0,0,0,0.02); z-index: 10; }
-        .profile { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .profile .avatar { width: 70px; height: 70px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; margin: 0 auto 15px; }
-        .nav-item { padding: 14px 20px; margin-bottom: 10px; border-radius: 12px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: 0.3s; display: flex; align-items: center; gap: 10px; }
-        .nav-item:hover { background: var(--bg-color); color: var(--primary); }
-        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(15, 118, 110, 0.2); }
-        .logout-btn { margin-top: auto; background: #fee2e2; color: #b91c1c; text-align: center; border-radius: 12px; padding: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .logout-btn:hover { background: #fecaca; }
-
-        /* Komponen Kartu & Tabel Modern */
-        h1, h2 { margin-top: 0; }
-        .card { background: var(--surface); padding: 25px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 25px; border: 1px solid rgba(226, 232, 240, 0.5); }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
-        .stat-card { background: linear-gradient(135deg, var(--primary), #115e59); color: white; padding: 25px; border-radius: var(--radius); text-align: center; box-shadow: 0 10px 15px -3px rgba(15, 118, 110, 0.3); }
-        .stat-card h3 { font-size: 36px; margin: 0; font-weight: 800; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; border-bottom: 2px solid var(--border); }
-        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 14px; }
-        tr:hover td { background: var(--bg-color); }
-        .badge { background: #e0f2fe; color: #0369a1; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-
-        /* Form Styling */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
-        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-color); font-family: inherit; box-sizing: border-box; }
-        .form-group input:focus { outline: 2px solid var(--primary); border-color: transparent; }
+        /* Komponen */
+        .card { background: var(--surface); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th { text-align: left; padding: 12px; color: var(--muted); border-bottom: 2px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid var(--border); }
+        tr:hover td { background: var(--bg); }
+        .badge { background: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        
+        /* Utilitas Login & Loading */
+        #login-screen { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; justify-content: center; align-items: center; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; }
     </style>
 </head>
 <body>
 
-    <!-- Loading UI -->
-    <div id="loader">
-        <div class="spinner"></div>
-        <div id="loader-text">Memuat data dari sistem...</div>
-    </div>
-
-    <!-- Halaman Login -->
     <div id="login-screen">
-        <div class="login-box">
-            <h2>Akses Admin</h2>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">Sistem Administrasi Terpadu</p>
-            <input type="text" id="username" placeholder="Username (admin)" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button class="btn" onclick="prosesLogin()" style="margin-top: 15px;">Masuk Sekarang</button>
-            <div id="login-error" style="color: #dc2626; margin-top: 15px; font-size: 14px; display: none;"></div>
+        <div class="card" style="width: 300px; text-align: center;">
+            <h2>Sistem Guru</h2>
+            <input type="text" id="username" placeholder="Username" style="width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;">
+            <input type="password" id="password" placeholder="Password" style="width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;">
+            <button class="btn" style="width: 100%;" onclick="login()">Masuk</button>
         </div>
     </div>
 
-    <!-- Halaman Aplikasi Utama -->
-    <div id="app-screen" style="display: none;">
+    <div id="app-screen" style="display: none; width: 100%;">
         
         <!-- AREA KONTEN (KIRI) -->
         <div class="main-content">
             
-            <!-- Halaman Dashboard -->
             <div id="menu-dashboard" class="section active">
-                <div>
-                    <h1 style="font-size: 28px; margin-bottom: 5px;">Ringkasan Data</h1>
-                    <p style="color: var(--text-muted); margin-bottom: 30px;">Pantauan data administrasi Anda saat ini secara real-time.</p>
-                </div>
-                
-                <div class="grid-3">
-                    <div class="stat-card">
-                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Total Siswa</div>
-                        <h3 id="stat-siswa">0</h3>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
-                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Jurnal Mengajar</div>
-                        <h3 id="stat-jurnal">0</h3>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b, #b45309);">
-                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Hari Ini</div>
-                        <h3><span id="hari-ini"></span></h3>
-                    </div>
-                </div>
-
+                <h1>Ringkasan</h1>
                 <div class="card">
-                    <h2 style="font-size: 18px;">Riwayat Jurnal Terakhir</h2>
+                    <h3>Status Database</h3>
+                    <p>Sistem ini sekarang menarik data langsung dari 6 tabel yang telah dirancang sebelumnya.</p>
+                    <ul id="db-stats" style="color: var(--muted); line-height: 1.8;">
+                        <li>Memuat data...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="menu-presensi" class="section">
+                <h1>Log Presensi</h1>
+                <div class="card">
                     <table>
-                        <thead>
-                            <tr><th>Tanggal</th><th>Kelas</th><th>Mata Pelajaran</th><th>Materi Pokok</th></tr>
-                        </thead>
-                        <tbody id="tabel-jurnal-dashboard">
-                            <!-- Data akan dimuat via JS -->
-                        </tbody>
+                        <thead><tr><th>Tanggal</th><th>NIS</th><th>Kelas</th><th>Status</th><th>Keterangan</th></tr></thead>
+                        <tbody id="tbl-presensi"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Halaman Input Jurnal -->
             <div id="menu-jurnal" class="section">
-                <h1 style="font-size: 28px; margin-bottom: 5px;">Jurnal Mengajar</h1>
-                <p style="color: var(--text-muted); margin-bottom: 30px;">Catat aktivitas kegiatan belajar mengajar harian.</p>
-
+                <h1>Jurnal Mengajar</h1>
                 <div class="card">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Tanggal</label>
-                            <input type="date" id="j_tanggal" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Kelas</label>
-                            <select id="j_kelas">
-                                <option value="X TKJ 1">X TKJ 1</option>
-                                <option value="XI Informatika">XI Informatika</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>ID Mapel / Pelajaran</label>
-                            <input type="text" id="j_mapel" placeholder="Contoh: MP-TKJ01" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Materi Pokok</label>
-                            <input type="text" id="j_materi" placeholder="Topik hari ini..." required>
-                        </div>
-                        <div class="form-group">
-                            <label>Jumlah Siswa Hadir</label>
-                            <input type="number" id="j_hadir" value="0">
-                        </div>
-                        <div class="form-group">
-                            <label>Jumlah Siswa Absen</label>
-                            <input type="number" id="j_absen" value="0">
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label>Catatan / Kendala</label>
-                            <input type="text" id="j_kendala" placeholder="Kondisi kelas, kendala alat, dll.">
-                        </div>
-                    </div>
-                    <button class="btn" style="margin-top: 25px; width: auto;" onclick="simpanJurnal()">Simpan ke Database</button>
+                    <table>
+                        <thead><tr><th>Tanggal</th><th>Kelas</th><th>Mapel</th><th>Materi Pokok</th><th>Hadir/Absen</th></tr></thead>
+                        <tbody id="tbl-jurnal"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- Halaman Daftar Siswa -->
-            <div id="menu-siswa" class="section">
-                <h1 style="font-size: 28px; margin-bottom: 5px;">Daftar Siswa</h1>
-                <p style="color: var(--text-muted); margin-bottom: 30px;">Data Induk Siswa yang ditarik langsung dari Google Sheets.</p>
+            <div id="menu-nilai" class="section">
+                <h1>Log Nilai</h1>
                 <div class="card">
                     <table>
-                        <thead><tr><th>NIS</th><th>Nama Lengkap</th><th>Kelas</th></tr></thead>
-                        <tbody id="tabel-siswa">
-                            <!-- Data akan dimuat via JS -->
-                        </tbody>
+                        <thead><tr><th>NIS</th><th>ID Mapel</th><th>Jenis Asesmen</th><th>Skor</th></tr></thead>
+                        <tbody id="tbl-nilai"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="menu-jadwal" class="section">
+                <h1>Master Mapel & Jadwal</h1>
+                <div style="display:flex; gap: 20px;">
+                    <div class="card" style="flex: 1;">
+                        <h3>Mata Pelajaran</h3>
+                        <table style="font-size: 12px;">
+                            <thead><tr><th>ID</th><th>Nama Mapel</th><th>Tingkat</th></tr></thead>
+                            <tbody id="tbl-mapel"></tbody>
+                        </table>
+                    </div>
+                    <div class="card" style="flex: 1;">
+                        <h3>Jadwal</h3>
+                        <table style="font-size: 12px;">
+                            <thead><tr><th>Hari</th><th>Jam</th><th>Mapel</th><th>Kelas</th></tr></thead>
+                            <tbody id="tbl-jadwal"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="menu-siswa" class="section">
+                <h1>Master Siswa</h1>
+                <div class="card">
+                    <table>
+                        <thead><tr><th>NIS</th><th>Nama Lengkap</th><th>L/P</th><th>Kelas</th></tr></thead>
+                        <tbody id="tbl-siswa"></tbody>
                     </table>
                 </div>
             </div>
 
         </div>
 
-        <!-- SIDEBAR NAVIGASI (KANAN) -->
+        <!-- SIDEBAR (KANAN) -->
         <div class="sidebar">
-            <div class="profile">
-                <div class="avatar" id="ava-inisial">A</div>
-                <div style="font-weight: 700; font-size: 18px;" id="nama-user">Admin</div>
-                <div style="font-size: 13px; color: var(--text-muted); margin-top: 5px;">Sistem Guru Terpadu</div>
+            <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
+                <div style="font-size: 18px; font-weight: 700;" id="user-name">Admin</div>
+                <div style="font-size: 12px; color: var(--muted);">SMK N 1 Denpasar</div>
             </div>
+
+            <div class="nav-item active" onclick="nav('menu-dashboard', this)">📊 Ringkasan</div>
             
-            <div class="nav-item active" onclick="pindahMenu('menu-dashboard', this)">📊 Ringkasan</div>
-            <div class="nav-item" onclick="pindahMenu('menu-jurnal', this)">📝 Isi Jurnal</div>
-            <div class="nav-item" onclick="pindahMenu('menu-siswa', this)">👨‍🎓 Data Siswa</div>
+            <div class="nav-group">Transaksi (Log)</div>
+            <div class="nav-item" onclick="nav('menu-presensi', this)">✋ Presensi</div>
+            <div class="nav-item" onclick="nav('menu-jurnal', this)">📝 Jurnal Mengajar</div>
+            <div class="nav-item" onclick="nav('menu-nilai', this)">💯 Nilai Asesmen</div>
+
+            <div class="nav-group">Data Master</div>
+            <div class="nav-item" onclick="nav('menu-jadwal', this)">📚 Mapel & Jadwal</div>
+            <div class="nav-item" onclick="nav('menu-siswa', this)">👨‍🎓 Master Siswa</div>
             
-            <div class="logout-btn" onclick="logout()">Keluar Aplikasi</div>
+            <button class="btn" style="background: #fee2e2; color: #dc2626; margin-top: auto;" onclick="sessionStorage.clear(); location.reload();">Logout</button>
         </div>
 
     </div>
 
-    <!-- SCRIPT LOGIKA -->
     <script>
-        // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKPYolPypbUXu6gfnwlAVihKQgdNu9LeR5Rc1milb9v3TtPTvUx-N5Tg8m8P59G3H_/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKPYolPypbUXu6gfnwlAVihKQgdNu9LeR5Rc1milb9v3TtPTvUx-N5Tg8m8P59G3H_/exec';
 
-        // Set tanggal hari ini di kalender
-        document.getElementById('j_tanggal').valueAsDate = new Date();
-        document.getElementById('hari-ini').innerText = new Date().toLocaleDateString('id-ID', {weekday:'long'});
-
-        // Cek sesi login saat web dibuka
-        window.onload = function() {
-            if(sessionStorage.getItem('isLoggedIn') === 'true') {
+        window.onload = () => {
+            if(sessionStorage.getItem('isLoggedIn')) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-screen').style.display = 'flex';
-                document.getElementById('nama-user').innerText = sessionStorage.getItem('nama');
-                document.getElementById('ava-inisial').innerText = sessionStorage.getItem('nama').charAt(0);
-                tarikDataDariSheets(); // Langsung tarik data
+                document.getElementById('user-name').innerText = sessionStorage.getItem('nama');
+                fetchDatabase();
             }
         };
 
-        // 1. Logika Pindah Menu Sidebar
-        function pindahMenu(idTarget, element) {
-            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            document.getElementById(idTarget).classList.add('active');
-            element.classList.add('active');
+        function nav(id, el) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
         }
 
-        // 2. Fungsi Tampilkan Loading
-        function toggleLoading(show, text = 'Memuat...') {
-            document.getElementById('loader').style.display = show ? 'flex' : 'none';
-            document.getElementById('loader-text').innerText = text;
-        }
-
-        // 3. Proses Login
-        function prosesLogin() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            
-            toggleLoading(true, 'Memeriksa Kredensial...');
+        function login() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            document.querySelector('.btn').innerText = "Loading...";
             
             fetch(SCRIPT_URL, {
-                method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: 'login', username: user, password: pass })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'sukses') {
+                method: 'POST', redirect: 'follow', headers: {"Content-Type": "text/plain;charset=utf-8"},
+                body: JSON.stringify({action: 'login', username: u, password: p})
+            }).then(r => r.json()).then(d => {
+                if(d.status === 'sukses') {
                     sessionStorage.setItem('isLoggedIn', 'true');
-                    sessionStorage.setItem('nama', data.nama);
-                    location.reload(); // Refresh untuk masuk ke dashboard
-                } else {
-                    document.getElementById('login-error').innerText = data.message;
-                    document.getElementById('login-error').style.display = 'block';
-                    toggleLoading(false);
-                }
-            }).catch(err => {
-                document.getElementById('login-error').innerText = 'Koneksi ke sistem gagal.';
-                document.getElementById('login-error').style.display = 'block';
-                toggleLoading(false);
-            });
+                    sessionStorage.setItem('nama', d.nama);
+                    location.reload();
+                } else alert(d.message);
+            }).finally(() => document.querySelector('.btn').innerText = "Masuk");
         }
 
-        // 4. Tarik Data Realtime dari Google Sheets
-        function tarikDataDariSheets() {
-            toggleLoading(true, 'Menyinkronkan Database...');
+        // Fungsi menarik SEMUA isi Spreadsheet
+        function fetchDatabase() {
+            document.getElementById('db-stats').innerHTML = "<li>Menarik data dari server...</li>";
             
             fetch(SCRIPT_URL, {
-                method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: 'get_data' })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'sukses') {
-                    // Update Statistik
-                    document.getElementById('stat-siswa').innerText = data.siswa.length;
-                    document.getElementById('stat-jurnal').innerText = data.jurnal.length;
+                method: 'POST', redirect: 'follow', headers: {"Content-Type": "text/plain;charset=utf-8"},
+                body: JSON.stringify({action: 'get_all_data'})
+            }).then(r => r.json()).then(res => {
+                if(res.status === 'sukses') {
+                    const db = res.data;
+                    
+                    // Update Statistik Dashboard
+                    document.getElementById('db-stats').innerHTML = `
+                        <li><b>Master Siswa:</b> ${db.Master_Siswa.length} data</li>
+                        <li><b>Master Mapel:</b> ${db.Master_Mata_Pelajaran.length} data</li>
+                        <li><b>Master Jadwal:</b> ${db.Master_Jadwal.length} sesi</li>
+                        <li><b>Log Presensi:</b> ${db.Log_Presensi.length} catatan</li>
+                        <li><b>Log Jurnal:</b> ${db.Log_Jurnal_Mengajar.length} catatan</li>
+                        <li><b>Log Nilai:</b> ${db.Log_Nilai.length} catatan</li>
+                    `;
 
                     // Render Tabel Siswa
-                    const tbodySiswa = document.getElementById('tabel-siswa');
-                    tbodySiswa.innerHTML = '';
-                    data.siswa.forEach(s => {
-                        tbodySiswa.innerHTML += `<tr><td>${s.nis}</td><td style="font-weight:600">${s.nama}</td><td><span class="badge">${s.kelas}</span></td></tr>`;
-                    });
+                    document.getElementById('tbl-siswa').innerHTML = db.Master_Siswa.map(s => 
+                        `<tr><td>${s.NIS}</td><td><b>${s.Nama_Lengkap}</b></td><td>${s.Jenis_Kelamin}</td><td><span class="badge">${s.Kelas}</span></td></tr>`
+                    ).join('');
 
-                    // Render Tabel Jurnal (Ambil 5 terbaru)
-                    const tbodyJurnal = document.getElementById('tabel-jurnal-dashboard');
-                    tbodyJurnal.innerHTML = '';
-                    data.jurnal.slice(0, 5).forEach(j => {
-                        tbodyJurnal.innerHTML += `<tr><td>${j.tanggal}</td><td><span class="badge">${j.kelas}</span></td><td><b>${j.mapel}</b></td><td>${j.materi}</td></tr>`;
-                    });
+                    // Render Tabel Jurnal
+                    document.getElementById('tbl-jurnal').innerHTML = db.Log_Jurnal_Mengajar.map(j => 
+                        `<tr><td>${j.Tanggal}</td><td><span class="badge">${j.Kelas}</span></td><td>${j.ID_Mapel}</td><td>${j.Materi_Pokok}</td><td>${j.Siswa_Hadir}/${j.Siswa_Absen}</td></tr>`
+                    ).join('');
+
+                    // Render Tabel Presensi
+                    document.getElementById('tbl-presensi').innerHTML = db.Log_Presensi.map(p => 
+                        `<tr><td>${p.Waktu_Masuk.substring(0,10)}</td><td>${p.NISN}</td><td>${p.Kelas}</td><td><b>${p.Status}</b></td><td>${p.Keterangan}</td></tr>`
+                    ).join('');
+
+                    // Render Tabel Mapel
+                    document.getElementById('tbl-mapel').innerHTML = db.Master_Mata_Pelajaran.map(m => 
+                        `<tr><td><span class="badge">${m.ID_Mapel}</span></td><td>${m.Nama_Mapel}</td><td>${m.Tingkat_Kelas}</td></tr>`
+                    ).join('');
+
+                    // Render Tabel Jadwal
+                    document.getElementById('tbl-jadwal').innerHTML = db.Master_Jadwal.map(j => 
+                        `<tr><td>${j.Hari}</td><td>Ke-${j.Jam_Ke}</td><td>${j.ID_Mapel}</td><td><span class="badge">${j.Kelas}</span></td></tr>`
+                    ).join('');
+
+                    // Render Tabel Nilai
+                    document.getElementById('tbl-nilai').innerHTML = db.Log_Nilai.map(n => 
+                        `<tr><td>${n.NISN}</td><td>${n.ID_Mapel}</td><td>${n.Jenis_Asesmen}</td><td><b>${n.Skor}</b></td></tr>`
+                    ).join('');
                 }
-            })
-            .finally(() => toggleLoading(false));
-        }
-
-        // 5. Simpan Jurnal ke Google Sheets
-        function simpanJurnal() {
-            const payload = {
-                tanggal: document.getElementById('j_tanggal').value,
-                kelas: document.getElementById('j_kelas').value,
-                mapel: document.getElementById('j_mapel').value,
-                materi: document.getElementById('j_materi').value,
-                hadir: document.getElementById('j_hadir').value,
-                absen: document.getElementById('j_absen').value,
-                kendala: document.getElementById('j_kendala').value
-            };
-
-            if(!payload.mapel || !payload.materi) { alert("Mapel dan Materi wajib diisi!"); return; }
-
-            toggleLoading(true, 'Menyimpan ke Spreadsheet...');
-
-            fetch(SCRIPT_URL, {
-                method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: 'simpan_jurnal', payload: payload })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'sukses') {
-                    alert('Berhasil: ' + data.message);
-                    document.getElementById('j_materi').value = '';
-                    document.getElementById('j_kendala').value = '';
-                    tarikDataDariSheets(); // Refresh data dashboard
-                    pindahMenu('menu-dashboard', document.querySelectorAll('.nav-item')[0]); // Pindah ke dashboard
-                }
-            })
-            .finally(() => toggleLoading(false));
-        }
-
-        // 6. Logout
-        function logout() {
-            sessionStorage.clear();
-            location.reload();
+            });
         }
     </script>
 </body>
