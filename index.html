@@ -1,413 +1,434 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Administrasi Guru</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #0f766e; --primary-hover: #115e59; --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --muted: #64748b; --border: #e2e8f0; --danger: #ef4444; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Sidebar & Layout */
-        .sidebar { width: 280px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; box-shadow: -4px 0 15px rgba(0,0,0,0.03); z-index: 10; }
-        .main-content { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; position: relative; }
-        
-        .nav-item { padding: 12px 15px; margin-bottom: 6px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); transition: 0.2s; }
-        .nav-item:hover { background: var(--bg); color: var(--primary); }
-        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(15,118,110,0.2); }
-        
-        /* Header & Table */
-        .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        h1 { margin: 0; font-size: 26px; font-weight: 800; }
-        .card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); overflow: hidden; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { text-align: left; padding: 15px; color: var(--muted); border-bottom: 2px solid var(--border); background: #fdfdfd; font-size: 12px; text-transform: uppercase; }
-        td { padding: 15px; border-bottom: 1px solid var(--border); }
-        tr:hover td { background: var(--bg); }
-        
-        /* Buttons */
-        .btn { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; font-size: 14px; transition: 0.2s; }
-        .btn:hover { background: var(--primary-hover); }
-        .btn-danger { background: var(--danger); }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
-        .btn-text { background: transparent; color: var(--primary); }
-        
-        /* Modal & Form */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(2px); z-index: 50; display: none; justify-content: center; align-items: center; }
-        .modal { background: var(--surface); width: 100%; max-width: 500px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); padding: 30px; animation: modalPop 0.3s ease; }
-        @keyframes modalPop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-        .form-control { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; box-sizing: border-box; background: var(--bg); }
-        .form-control:focus { outline: 2px solid var(--primary); border-color: transparent; }
-        
-        /* Toast Notification */
-        .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 99px; font-size: 14px; font-weight: 600; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideUp 0.3s forwards, fadeOut 0.3s 2.7s forwards; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrasi Guru SMK - Lokal Terhubung Drive</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --navy: #0f172a;
+      --navy-light: #1e293b;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --hadir: #10b981;
+      --dispen: #8b5cf6;
+      --sakit: #06b6d4;
+      --izin: #f59e0b;
+      --alpa: #ef4444;
+    }
 
-        /* Loader */
-        #loader { display: none; padding: 40px; text-align: center; color: var(--muted); font-weight: 600; }
-        .spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 10px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-    </style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
+
+    header {
+      background: var(--navy); color: white; position: sticky; top: 0; z-index: 50;
+      padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo {
+      width: 40px; height: 40px; background: var(--primary); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .brand-title { font-weight: 700; font-size: 16px; }
+    .brand-sub { font-size: 11px; color: #94a3b8; }
+
+    .btn-drawer-toggle {
+      width: 42px; height: 42px; border-radius: 50%; background: var(--navy-light);
+      border: 1px solid #334155; color: white; cursor: pointer; font-size: 18px;
+      display: flex; align-items: center; justify-content: center; transition: 0.2s;
+    }
+    .btn-drawer-toggle:hover { background: var(--primary); border-color: var(--primary); }
+
+    .drawer-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: 0.3s; z-index: 998;
+    }
+    .drawer-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .drawer-panel {
+      position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
+      background: var(--navy); color: white; z-index: 999;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column; box-shadow: -8px 0 24px rgba(0,0,0,0.3);
+    }
+    .drawer-panel.active { right: 0; }
+    .drawer-head {
+      padding: 20px; border-bottom: 1px solid var(--navy-light);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .drawer-close { background: none; border: none; color: #94a3b8; font-size: 26px; cursor: pointer; }
+    .drawer-label { padding: 18px 20px 8px; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1.2px; }
+    .drawer-nav { padding: 0 12px; display: flex; flex-direction: column; gap: 6px; }
+    .nav-btn {
+      background: transparent; border: none; color: #cbd5e1; padding: 12px 16px;
+      border-radius: 10px; text-align: left; font-size: 14px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s;
+    }
+    .nav-btn:hover { background: var(--navy-light); color: white; }
+    .nav-btn.active { background: rgba(37, 99, 235, 0.2); color: #60a5fa; }
+
+    main { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px; margin-bottom: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .section-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .stat-val { font-size: 24px; font-weight: 800; color: var(--navy); margin-top: 4px; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; }
+    select, input, textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+      font-size: 14px; background: #f8fafc; color: var(--text); outline: none; transition: 0.2s;
+    }
+    select:focus, input:focus, textarea:focus { border-color: var(--primary); background: white; }
+    input[disabled] { background: #e2e8f0; color: #475569; cursor: not-allowed; font-weight: 600; }
+
+    /* Tabel Matriks Rekap Presensi Semester */
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      background: white;
+    }
+    .matrix-table th, .matrix-table td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .matrix-head-main th {
+      background: #4c1d95;
+      color: white;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .matrix-head-date th {
+      background: #f3e8ff;
+      color: #4c1d95;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 3px;
+    }
+    .matrix-table td.col-nama {
+      text-align: left;
+      padding-left: 8px;
+      padding-right: 12px;
+      font-weight: 600;
+      position: sticky;
+      left: 0;
+      background: white;
+      z-index: 2;
+    }
+    .matrix-table tr:nth-child(even) td.col-nama { background: #f8fafc; }
+    .matrix-table tr:nth-child(even) { background: #f8fafc; }
+
+    .th-h { background: #15803d !important; color: white !important; min-width: 28px; }
+    .th-d { background: #7e22ce !important; color: white !important; min-width: 28px; }
+    .th-s { background: #ea580c !important; color: white !important; min-width: 28px; }
+    .th-i { background: #2563eb !important; color: white !important; min-width: 28px; }
+    .th-a { background: #dc2626 !important; color: white !important; min-width: 28px; }
+    .th-pct { background: #4c1d95 !important; color: white !important; min-width: 48px; }
+
+    .st-cell { font-weight: 800; font-size: 11px; }
+    .st-H { color: #15803d; }
+    .st-D { color: #7e22ce; }
+    .st-S { color: #ea580c; }
+    .st-I { color: #2563eb; }
+    .st-A { color: #dc2626; background: #fee2e2; }
+
+    .matrix-footer td {
+      background: #4c1d95 !important;
+      color: white !important;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    @media print {
+      header, .floating-footer, .no-print { display: none !important; }
+      main { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+      .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+      body { background: white !important; padding-bottom: 0 !important; }
+    }
+
+    /* Presensi Student Cards (1 Kartu per Baris, Mobile-Friendly) */
+    .student-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .student-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      transition: opacity 0.3s;
+    }
+    .photo-frame {
+      width: 135px;
+      aspect-ratio: 3 / 4;
+      margin: 0 auto 14px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+    }
+    .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+    .st-name {
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--navy);
+      margin-bottom: 4px;
+      line-height: 1.35;
+    }
+    .st-nis { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+    .radio-bar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #f8fafc;
+      padding: 12px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .radio-opt {
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+    }
+    .radio-opt input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; font-size: 11px; text-transform: uppercase; color: var(--muted); }
+
+    .btn {
+      background: var(--primary); color: white; border: none; padding: 12px 20px;
+      border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s;
+    }
+    .btn:hover { background: var(--primary-dark); }
+    .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+    .btn-success { background: var(--hadir); }
+
+    .floating-footer {
+      position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(8px); border-top: 1px solid var(--border); padding: 12px;
+      text-align: center; z-index: 40;
+    }
+    .btn-float { width: 100%; max-width: 420px; border-radius: 30px; padding: 14px; }
+    .hidden { display: none !important; }
+  </style>
 </head>
 <body>
 
-    <!-- Layar Login -->
-    <div id="login-screen" style="position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; justify-content:center; align-items:center;">
-        <div class="card" style="width: 320px; padding: 40px; text-align: center;">
-            <h2 style="margin-top:0;">Panel Guru</h2>
-            <input type="text" id="username" class="form-control" placeholder="Username" style="margin-bottom:15px;">
-            <input type="password" id="password" class="form-control" placeholder="Password" style="margin-bottom:20px;">
-            <button class="btn" style="width:100%;" onclick="login()" id="btn-login">Masuk Aplikasi</button>
-        </div>
+  <script>
+    // TEMPELKAN URL WEB APP (/exec) ANDA DI SINI:
+    const API_URL = "https://script.google.com/macros/s/AKfycbzPtnz5DLtw_1n9E3NtQlb3HIQQDxf01ALhHtJwk-c8JoNpy11H-JdaRwFdnTFLkP8eZg/exec";
+  </script>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo"><i class="fa-solid fa-chalkboard-user"></i></div>
+      <div>
+        <div class="brand-title">Administrasi Guru SMK</div>
+        <div class="brand-sub" id="sync-status"><i class="fa-solid fa-spinner fa-spin"></i> Menghubungkan Google Drive...</div>
+      </div>
     </div>
+    <button class="btn-drawer-toggle" onclick="toggleDrawer()" title="Menu Navigasi">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </header>
 
-    <!-- Container Utama -->
-    <div id="app-screen" style="display:none; width: 100%;">
-        
-        <!-- Area Konten Dinamis -->
-        <div class="main-content">
-            <div class="header-action">
-                <div>
-                    <h1 id="page-title">Dashboard</h1>
-                    <div id="page-desc" style="color: var(--muted); font-size: 14px; margin-top: 5px;">Ringkasan sistem administrasi.</div>
-                </div>
-                <button class="btn" id="btn-add" style="display: none;" onclick="openModal()">+ Tambah Data</button>
-            </div>
-
-            <div class="card" id="table-container" style="display: none; overflow-x: auto;">
-                <table id="data-table">
-                    <thead id="table-head"></thead>
-                    <tbody id="table-body"></tbody>
-                </table>
-            </div>
-            
-            <div id="loader"><div class="spinner"></div>Mensinkronkan data...</div>
-        </div>
-
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div style="text-align: center; padding-bottom: 15px; border-bottom: 1px solid var(--border); margin-bottom: 20px;">
-                <div style="font-size: 16px; font-weight: 800; color: var(--primary);" id="user-name">Admin</div>
-                <div style="font-size: 12px; color: var(--muted);">SMK N 1 Denpasar</div>
-            </div>
-            
-            <!-- Menu Navigasi Dihasilkan via JS -->
-            <div id="nav-container"></div>
-            
-            <button class="btn btn-text" style="margin-top: auto; color: var(--danger);" onclick="sessionStorage.clear(); location.reload();">Logout</button>
-        </div>
+  <!-- RIGHT DRAWER MENU -->
+  <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
+  <aside id="drawer-panel" class="drawer-panel">
+    <div class="drawer-head">
+      <span style="font-weight: 700; font-size: 16px;">Menu Administrasi</span>
+      <button class="drawer-close" onclick="toggleDrawer()">&times;</button>
     </div>
+    <div class="drawer-label">NAVIGASI UTAMA</div>
+    <nav class="drawer-nav">
+      <button class="nav-btn active" id="nav-dashboard" onclick="switchModule('dashboard')">
+        <i class="fa-solid fa-house" style="width:18px; color:#60a5fa;"></i> Dashboard & Jadwal
+      </button>
+      <button class="nav-btn" id="nav-presensi" onclick="switchModule('presensi')">
+        <i class="fa-solid fa-user-check" style="width:18px; color:#34d399;"></i> Presensi Visual
+      </button>
+      <button class="nav-btn" id="nav-jurnal" onclick="switchModule('jurnal')">
+        <i class="fa-solid fa-book-open" style="width:18px; color:#fbbf24;"></i> Jurnal Mengajar
+      </button>
+      <button class="nav-btn" id="nav-nilai" onclick="switchModule('nilai')">
+        <i class="fa-solid fa-award" style="width:18px; color:#c084fc;"></i> Input Nilai
+      </button>
+      <button class="nav-btn" id="nav-rekap" onclick="switchModule('rekap')">
+        <i class="fa-solid fa-file-lines" style="width:18px; color:#38bdf8;"></i> Rekap Laporan
+      </button>
+    </nav>
+  </aside>
 
-    <!-- Modal Form (Generic Form) -->
-    <div class="modal-overlay" id="modal">
-        <div class="modal">
-            <h2 id="modal-title" style="margin-top:0;">Form</h2>
-            <form id="dynamic-form" onsubmit="event.preventDefault(); saveRecord();">
-                <!-- Input field akan di-inject ke sini -->
-                <div id="form-fields"></div>
-                
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
-                    <button type="button" class="btn btn-text" style="color: var(--text);" onclick="closeModal()">Batal</button>
-                    <button type="submit" class="btn" id="btn-save">Simpan Data</button>
-                </div>
-            </form>
+  <main>
+    <!-- MODUL 1: DASHBOARD -->
+    <section id="mod-dashboard" class="module-pane">
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-label">Total Rombel</div><div class="stat-val" id="stat-kelas">-</div></div>
+        <div class="stat-box"><div class="stat-label">Total Siswa</div><div class="stat-val" id="stat-siswa" style="color:var(--primary);">-</div></div>
+        <div class="stat-box"><div class="stat-label">Mata Pelajaran</div><div class="stat-val" id="stat-mapel" style="color:var(--hadir);">-</div></div>
+        <div class="stat-box"><div class="stat-label">Jurnal Terisi</div><div class="stat-val" id="stat-jurnal" style="color:var(--izin);">-</div></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title"><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> Jadwal Mengajar Hari Ini (<span id="hari-ini-label"></span>)</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Jam Ke</th><th>Kelas</th><th>Mata Pelajaran</th><th>Aksi Cepat</th></tr></thead>
+            <tbody id="tbody-jadwal-hari-ini">
+              <tr><td colspan="4" style="text-align:center; color:var(--muted);">Memuat jadwal...</td></tr>
+            </tbody>
+          </table>
         </div>
-    </div>
+      </div>
+    </section>
 
-    <div class="toast-container" id="toast-container"></div>
+    <!-- MODUL 2: PRESENSI VISUAL -->
+    <section id="mod-presensi" class="module-pane hidden">
+      <div class="card">
+        <div class="section-title"><i class="fa-solid fa-user-check" style="color:var(--hadir);"></i> Input Presensi Siswa</div>
+        <div class="form-grid">
+          <div><label>Kelas</label><select id="pres-kelas" onchange="renderPresensiCards()"><option value="" selected disabled>Pilih...</option></select></div>
+          <div><label>Mata Pelajaran</label><select id="pres-mapel"><option value="" selected disabled>Pilih...</option></select></div>
+          <div><label>Tanggal (Otomatis)</label><input type="date" id="pres-tanggal" disabled></div>
+        </div>
+        <input type="text" id="pres-cari" onkeyup="filterPresensiCards()" placeholder="Cari nama atau NIS siswa...">
+      </div>
 
-    <script>
-        // === GANTI DENGAN URL APPS SCRIPT ANDA ===
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKPYolPypbUXu6gfnwlAVihKQgdNu9LeR5Rc1milb9v3TtPTvUx-N5Tg8m8P59G3H_/exec'; 
+      <div id="presensi-cards-container" class="student-grid">
+        <p style="text-align:center; color:var(--muted); padding:30px 0;">Silakan pilih Kelas dan Mata Pelajaran terlebih dahulu...</p>
+      </div>
 
-        // === KONFIGURASI SKEMA DATABASE & UI ===
-        // Objek ini mengontrol struktur form dan tabel untuk seluruh aplikasi tanpa menulis HTML berulang.
-        const APP_CONFIG = {
-            siswa: {
-                id: 'siswa', title: 'Master Siswa', desc: 'Kelola data induk siswa.', sheet: 'Master_Siswa', keyCol: 'NIS',
-                fields: [
-                    { name: 'NIS', label: 'NIS (Kunci)', type: 'text', required: true },
-                    { name: 'Nama_Lengkap', label: 'Nama Lengkap', type: 'text', required: true },
-                    { name: 'Kelas', label: 'Kelas', type: 'select', options: ['X TKJ 1', 'X TKJ 2', 'XI Informatika'] },
-                    { name: 'Jenis_Kelamin', label: 'Jenis Kelamin (L/P)', type: 'select', options: ['L', 'P'] },
-                    { name: 'Tahun_Ajaran', label: 'Tahun Ajaran', type: 'text', default: '2026/2027' }
-                ]
-            },
-            mapel: {
-                id: 'mapel', title: 'Mata Pelajaran', desc: 'Daftar mata pelajaran yang diampu.', sheet: 'Master_Mata_Pelajaran', keyCol: 'ID_Mapel',
-                fields: [
-                    { name: 'ID_Mapel', label: 'ID Mapel (Kunci)', type: 'text', required: true },
-                    { name: 'Nama_Mapel', label: 'Nama Pelajaran', type: 'text', required: true },
-                    { name: 'Tingkat_Kelas', label: 'Tingkat Kelas', type: 'select', options: ['X', 'XI', 'XII'] }
-                ]
-            },
-            jadwal: {
-                id: 'jadwal', title: 'Jadwal Mengajar', desc: 'Jadwal tatap muka mingguan.', sheet: 'Master_Jadwal', keyCol: 'ID_Jadwal',
-                fields: [
-                    { name: 'ID_Jadwal', label: 'ID Jadwal (Kosongkan utk Auto)', type: 'text' },
-                    { name: 'Hari', label: 'Hari', type: 'select', options: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] },
-                    { name: 'Jam_Ke', label: 'Jam Ke-', type: 'number' },
-                    { name: 'ID_Mapel', label: 'ID Mapel', type: 'text' },
-                    { name: 'Kelas', label: 'Kelas', type: 'text' }
-                ]
-            },
-            presensi: {
-                id: 'presensi', title: 'Absensi Siswa', desc: 'Catat kehadiran harian.', sheet: 'Log_Presensi', keyCol: 'ID_Presensi',
-                fields: [
-                    { name: 'ID_Presensi', label: 'ID Presensi (Kosongkan utk Auto)', type: 'text' },
-                    { name: 'Waktu_Masuk', label: 'Tanggal (YYYY-MM-DD)', type: 'date', required: true },
-                    { name: 'NISN', label: 'NIS Siswa', type: 'text', required: true },
-                    { name: 'Kelas', label: 'Kelas', type: 'text' },
-                    { name: 'Status', label: 'Status Kehadiran', type: 'select', options: ['Hadir', 'Sakit', 'Izin', 'Alpa'] },
-                    { name: 'Keterangan', label: 'Keterangan', type: 'text' }
-                ]
-            },
-            jurnal: {
-                id: 'jurnal', title: 'Jurnal Mengajar', desc: 'Log aktivitas pembelajaran.', sheet: 'Log_Jurnal_Mengajar', keyCol: 'ID_Jurnal',
-                fields: [
-                    { name: 'ID_Jurnal', label: 'ID Jurnal (Kosongkan utk Auto)', type: 'text' },
-                    { name: 'Tanggal', label: 'Tanggal', type: 'date', required: true },
-                    { name: 'Kelas', label: 'Kelas', type: 'text' },
-                    { name: 'ID_Mapel', label: 'ID Mapel', type: 'text' },
-                    { name: 'Materi_Pokok', label: 'Materi Pokok', type: 'text', required: true },
-                    { name: 'Siswa_Hadir', label: 'Jml Hadir', type: 'number' },
-                    { name: 'Siswa_Absen', label: 'Jml Absen', type: 'number' },
-                    { name: 'Catatan_Kendala', label: 'Catatan Kendala', type: 'text' }
-                ]
-            },
-            nilai: {
-                id: 'nilai', title: 'Penilaian Siswa', desc: 'Rekap asesmen dan evaluasi.', sheet: 'Log_Nilai', keyCol: 'ID_Nilai',
-                fields: [
-                    { name: 'ID_Nilai', label: 'ID Nilai (Kosongkan utk Auto)', type: 'text' },
-                    { name: 'Waktu_Input', label: 'Tanggal Input', type: 'date', required: true },
-                    { name: 'NISN', label: 'NIS Siswa', type: 'text', required: true },
-                    { name: 'ID_Mapel', label: 'ID Mapel', type: 'text', required: true },
-                    { name: 'Jenis_Asesmen', label: 'Jenis Asesmen', type: 'select', options: ['Tugas Harian', 'Formatif', 'PTS', 'PAS', 'Proyek'] },
-                    { name: 'Skor', label: 'Skor (0-100)', type: 'number', required: true }
-                ]
-            }
-        };
+      <div class="floating-footer">
+        <button id="btn-simpan-presensi" class="btn btn-float" onclick="submitPresensi()">KIRIM SEMUA ABSENSI</button>
+      </div>
+    </section>
 
-        // State Aplikasi
-        let currentMenu = 'siswa';
-        let dbData = {}; 
-        let editId = null;
+    <!-- MODUL 3: JURNAL MENGAJAR -->
+    <section id="mod-jurnal" class="module-pane hidden">
+      <div class="card">
+        <div class="section-title"><i class="fa-solid fa-book-open" style="color:var(--izin);"></i> Jurnal Mengajar Harian (KBM)</div>
+        <form onsubmit="submitJurnal(event)">
+          <div class="form-grid">
+            <div><label>Tanggal KBM (Otomatis)</label><input type="date" id="jrn-tanggal" disabled></div>
+            <div><label>Kelas</label><select id="jrn-kelas" onchange="autoFillKehadiranJurnal()" required><option value="" selected disabled>Pilih...</option></select></div>
+            <div><label>Mata Pelajaran</label><select id="jrn-mapel" onchange="autoFillKehadiranJurnal()" required><option value="" selected disabled>Pilih...</option></select></div>
+          </div>
+          <div class="form-grid">
+            <div><label>Jam Pelajaran Ke-</label><input type="text" id="jrn-jam" placeholder="Contoh: 1 - 4" required></div>
+            <div><label>Siswa Hadir (Otomatis dari Presensi)</label><input type="number" id="jrn-hadir" value="0" min="0" required></div>
+            <div><label>Siswa Absen (S/I/A)</label><input type="number" id="jrn-absen" value="0" min="0" required></div>
+          </div>
+          <div style="margin-bottom:12px;"><label>Materi Pokok / Tujuan Pembelajaran</label><input type="text" id="jrn-materi" placeholder="Tuliskan materi yang diajarkan hari ini..." required></div>
+          <div style="margin-bottom:16px;"><label>Catatan Kendala & Refleksi KBM</label><textarea id="jrn-catatan" rows="3" placeholder="Catatan kejadian khusus atau tindak lanjut..."></textarea></div>
+          <button type="submit" id="btn-simpan-jurnal" class="btn btn-success" style="width:100%;">SIMPAN JURNAL MENGAJAR</button>
+        </form>
+      </div>
+    </section>
 
-        // Inisialisasi
-        window.onload = () => {
-            renderNav();
-            if(sessionStorage.getItem('isLoggedIn')) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-screen').style.display = 'flex';
-                document.getElementById('user-name').innerText = sessionStorage.getItem('nama');
-                fetchData();
-            }
-        };
+    <!-- MODUL 4: INPUT NILAI -->
+    <section id="mod-nilai" class="module-pane hidden">
+      <div class="card">
+        <div class="section-title"><i class="fa-solid fa-award" style="color:var(--dispen);"></i> Input Nilai Asesmen Siswa</div>
+        <div class="form-grid">
+          <div><label>Kelas</label><select id="nil-kelas" onchange="renderNilaiTable()"><option value="" selected disabled>Pilih...</option></select></div>
+          <div><label>Mata Pelajaran</label><select id="nil-mapel"><option value="" selected disabled>Pilih...</option></select></div>
+          <div>
+            <label>Jenis Penilaian</label>
+            <select id="nil-jenis">
+              <option value="" selected disabled>Pilih...</option>
+              <option value="Tugas 1">Tugas 1</option>
+              <option value="Tugas 2">Tugas 2</option>
+              <option value="Formatif / UH 1">Formatif / UH 1</option>
+              <option value="Formatif / UH 2">Formatif / UH 2</option>
+              <option value="Sumatif Tengah Semester">Sumatif Tengah Semester</option>
+              <option value="Sumatif Akhir Semester">Sumatif Akhir Semester</option>
+              <option value="Proyek / Praktik">Proyek / Praktik</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
-        // Render Sidebar Menu Otomatis
-        function renderNav() {
-            const navContainer = document.getElementById('nav-container');
-            navContainer.innerHTML = '';
-            Object.values(APP_CONFIG).forEach(cfg => {
-                const nav = document.createElement('div');
-                nav.className = `nav-item ${currentMenu === cfg.id ? 'active' : ''}`;
-                nav.innerText = cfg.title;
-                nav.onclick = () => { currentMenu = cfg.id; renderNav(); renderTable(); };
-                navContainer.appendChild(nav);
-            });
-        }
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:50px;">No</th><th>NIS</th><th>Nama Siswa</th><th style="width:110px;">Nilai (0-100)</th></tr></thead>
+            <tbody id="tbody-nilai"><tr><td colspan="4" style="text-align:center; color:var(--muted);">Silakan pilih Kelas terlebih dahulu...</td></tr></tbody>
+          </table>
+        </div>
+        <div style="margin-top:16px; text-align:right;"><button id="btn-simpan-nilai" class="btn" onclick="submitNilai()">SIMPAN SEMUA NILAI</button></div>
+      </div>
+    </section>
 
-        // Login
-        function login() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            const btn = document.getElementById('btn-login');
-            btn.innerText = "Loading...";
-            
-            fetch(SCRIPT_URL, {
-                method: 'POST', body: JSON.stringify({action: 'login', username: u, password: p})
-            }).then(r => r.json()).then(d => {
-                if(d.status === 'sukses') {
-                    sessionStorage.setItem('isLoggedIn', 'true');
-                    sessionStorage.setItem('nama', d.nama);
-                    location.reload();
-                } else showToast(d.message);
-            }).finally(() => btn.innerText = "Masuk Aplikasi");
-        }
+    <!-- MODUL 5: REKAP LAPORAN SEMESTER (16 PERTEMUAN) -->
+    <section id="mod-rekap" class="module-pane hidden">
+      <div class="card no-print">
+        <div class="section-title"><i class="fa-solid fa-table-cells" style="color:#4c1d95;"></i> Rekap Presensi Semester (16 Pertemuan)</div>
+        <div class="form-grid">
+          <div>
+            <label>Pilih Kelas (Wajib)</label>
+            <select id="rek-kelas">
+              <option value="" selected disabled>Pilih...</option>
+            </select>
+          </div>
+          <div>
+            <label>Pilih Mata Pelajaran (Wajib)</label>
+            <select id="rek-mapel">
+              <option value="" selected disabled>Pilih...</option>
+            </select>
+          </div>
+          <div>
+            <label>Semester</label>
+            <select id="rek-semester">
+              <option value="Ganjil">Semester Ganjil (Jul - Des)</option>
+              <option value="Genap">Semester Genap (Jan - Jun)</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn" style="background:#4c1d95;" onclick="loadRekapLaporan()"><i class="fa-solid fa-magnifying-glass"></i> Tampilkan Rekap</button>
+          <button class="btn" style="background:#475569;" onclick="window.print()"><i class="fa-solid fa-print"></i> Cetak / Simpan PDF</button>
+        </div>
+      </div>
 
-        // Tarik Data (Read All)
-        function fetchData() {
-            document.getElementById('table-container').style.display = 'none';
-            document.getElementById('loader').style.display = 'block';
-            
-            fetch(SCRIPT_URL, {
-                method: 'POST', body: JSON.stringify({action: 'get_all_data'})
-            }).then(r => r.json()).then(res => {
-                if(res.status === 'sukses') {
-                    dbData = res.data;
-                    renderTable();
-                }
-            }).finally(() => {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('table-container').style.display = 'block';
-            });
-        }
+      <div class="card" style="padding:14px;">
+        <div id="rekap-header-info" style="margin-bottom:12px; display:none;">
+          <h3 style="font-size:15px; color:#0f172a; margin-bottom:2px;">DAFTAR HADIR SISWA — SEMESTER <span id="lbl-rek-sem"></span></h3>
+          <p style="font-size:12px; color:#475569;">Kelas: <strong id="lbl-rek-kls"></strong> | Mata Pelajaran: <strong id="lbl-rek-mpl"></strong></p>
+        </div>
 
-        // Render Tabel Berdasarkan Menu Aktif
-        function renderTable() {
-            const config = APP_CONFIG[currentMenu];
-            document.getElementById('page-title').innerText = config.title;
-            document.getElementById('page-desc').innerText = config.desc;
-            document.getElementById('btn-add').style.display = 'block';
-
-            const dataArr = dbData[config.sheet] || [];
-            
-            // Header Tabel
-            const thead = document.getElementById('table-head');
-            thead.innerHTML = '';
-            const trHead = document.createElement('tr');
-            config.fields.forEach(f => {
-                const th = document.createElement('th'); th.innerText = f.name; trHead.appendChild(th);
-            });
-            const thAction = document.createElement('th'); thAction.innerText = "Aksi"; trHead.appendChild(thAction);
-            thead.appendChild(trHead);
-
-            // Body Tabel
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-            if(dataArr.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${config.fields.length + 1}" style="text-align:center; padding:30px;">Belum ada data</td></tr>`;
-                return;
-            }
-
-            dataArr.forEach(row => {
-                const tr = document.createElement('tr');
-                config.fields.forEach(f => {
-                    const td = document.createElement('td'); td.innerText = row[f.name] || '-'; tr.appendChild(td);
-                });
-                
-                // Tombol Aksi (Edit & Hapus)
-                const keyVal = row[config.keyCol];
-                const tdAction = document.createElement('td');
-                tdAction.innerHTML = `
-                    <button class="btn btn-sm" style="background:#f1f5f9; color:var(--primary);" onclick="openModal('${keyVal}')">Edit</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteRecord('${keyVal}')">Hapus</button>
-                `;
-                tr.appendChild(tdAction);
-                tbody.appendChild(tr);
-            });
-        }
-
-        // Buka Modal (Mode Tambah atau Edit)
-        function openModal(id = null) {
-            editId = id;
-            const config = APP_CONFIG[currentMenu];
-            document.getElementById('modal-title').innerText = id ? `Edit ${config.title}` : `Tambah ${config.title}`;
-            
-            // Susun Input Form Dinamis
-            const formFields = document.getElementById('form-fields');
-            formFields.innerHTML = '';
-            
-            let existingData = {};
-            if(id) {
-                const dataArr = dbData[config.sheet];
-                existingData = dataArr.find(r => String(r[config.keyCol]) === String(id)) || {};
-            } else if (config.fields.find(f => f.type === 'date')) {
-                // Set default tanggal hari ini
-                existingData[config.fields.find(f => f.type === 'date').name] = new Date().toISOString().split('T')[0];
-            }
-
-            config.fields.forEach(f => {
-                const group = document.createElement('div'); group.className = 'form-group';
-                const label = document.createElement('label'); label.innerText = f.label;
-                group.appendChild(label);
-                
-                let input;
-                if(f.type === 'select') {
-                    input = document.createElement('select');
-                    f.options.forEach(opt => {
-                        const o = document.createElement('option'); o.value = opt; o.innerText = opt;
-                        if(existingData[f.name] === opt) o.selected = true;
-                        input.appendChild(o);
-                    });
-                } else {
-                    input = document.createElement('input');
-                    input.type = f.type === 'date' ? 'date' : (f.type === 'number' ? 'number' : 'text');
-                    input.value = existingData[f.name] !== undefined ? existingData[f.name] : (f.default || '');
-                    if(id && f.name === config.keyCol) input.readOnly = true; // Kunci PK saat edit
-                }
-                
-                input.id = `input_${f.name}`;
-                input.className = 'form-control';
-                if(f.required) input.required = true;
-                group.appendChild(input);
-                formFields.appendChild(group);
-            });
-
-            document.getElementById('modal').style.display = 'flex';
-        }
-
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-        // Eksekusi Simpan Data (Create/Update API)
-        function saveRecord() {
-            const config = APP_CONFIG[currentMenu];
-            const payload = {};
-            
-            config.fields.forEach(f => {
-                payload[f.name] = document.getElementById(`input_${f.name}`).value;
-            });
-
-            document.getElementById('btn-save').innerText = "Menyimpan...";
-            
-            fetch(SCRIPT_URL, {
-                method: 'POST', body: JSON.stringify({ 
-                    action: 'save_record', sheet: config.sheet, idValue: editId, payload: payload 
-                })
-            }).then(r => r.json()).then(res => {
-                if(res.status === 'sukses') {
-                    showToast(res.message);
-                    closeModal();
-                    fetchData(); // Refresh Tabel
-                } else showToast(res.message);
-            }).finally(() => document.getElementById('btn-save').innerText = "Simpan Data");
-        }
-
-        // Eksekusi Hapus Data (Delete API)
-        function deleteRecord(idValue) {
-            if(!confirm("Yakin ingin menghapus data ini?")) return;
-            const config = APP_CONFIG[currentMenu];
-            
-            showToast("Menghapus data...");
-            fetch(SCRIPT_URL, {
-                method: 'POST', body: JSON.stringify({ 
-                    action: 'delete_record', sheet: config.sheet, idValue: idValue 
-                })
-            }).then(r => r.json()).then(res => {
-                if(res.status === 'sukses') {
-                    showToast(res.message);
-                    fetchData();
-                } else showToast(res.message);
-            });
-        }
-
-        // Sistem Notifikasi Layar
-        function showToast(msg) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.innerText = msg;
-            container.appendChild(toast);
-            setTimeout(() => { toast.remove(); }, 3000);
-        }
-    </script>
-</body>
-</html>
+        <div class="table-wrap" id="reka
