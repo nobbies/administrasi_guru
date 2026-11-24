@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administrasi Guru SMK - Lokal Terhubung Drive</title>
+  <title>Administrasi Guru SMK</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
     :root {
@@ -249,7 +249,7 @@
 <body>
 
   <script>
-    // TEMPELKAN URL WEB APP (/exec) ANDA DI SINI:
+    // URL WEB APP GOOGLE APPS SCRIPT (/exec)
     const API_URL = "https://script.google.com/macros/s/AKfycbzPtnz5DLtw_1n9E3NtQlb3HIQQDxf01ALhHtJwk-c8JoNpy11H-JdaRwFdnTFLkP8eZg/exec";
   </script>
 
@@ -431,4 +431,419 @@
           <p style="font-size:12px; color:#475569;">Kelas: <strong id="lbl-rek-kls"></strong> | Mata Pelajaran: <strong id="lbl-rek-mpl"></strong></p>
         </div>
 
-        <div class="table-wrap" id="reka
+        <div class="table-wrap" id="rekap-matrix-container">
+          <p style="text-align:center; color:var(--muted); padding:24px 0;">Pilih Kelas, Mata Pelajaran, dan Semester lalu klik <strong>Tampilkan Rekap</strong>.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let MASTER_DATA = { kelas: [], mapel: [], jadwal: [], siswa: [], presensiHariIni: {}, totalJurnal: 0 };
+
+    const now = new Date();
+    const todayISO = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][now.getDay()];
+
+    document.getElementById('pres-tanggal').value = todayISO;
+    document.getElementById('jrn-tanggal').value = todayISO;
+    document.getElementById('hari-ini-label').innerText = namaHari;
+
+    function toggleDrawer() {
+      document.getElementById('drawer-panel').classList.toggle('active');
+      document.getElementById('drawer-overlay').classList.toggle('active');
+    }
+
+    function switchModule(modName) {
+      document.querySelectorAll('.module-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('mod-' + modName).classList.remove('hidden');
+      document.getElementById('nav-' + modName).classList.add('active');
+      if (document.getElementById('drawer-panel').classList.contains('active')) toggleDrawer();
+    }
+
+    window.onload = async function() {
+      const statusEl = document.getElementById('sync-status');
+      try {
+        const res = await fetch(`${API_URL}?action=getInitialData`, {
+          method: 'GET',
+          redirect: 'follow'
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data.status === 'success') {
+          MASTER_DATA = data;
+          statusEl.innerHTML = '<i class="fa-solid fa-cloud-check" style="color:#34d399;"></i> Terhubung ke Google Drive';
+          document.getElementById('stat-kelas').innerText = data.kelas.length;
+          document.getElementById('stat-siswa').innerText = data.siswa.length;
+          document.getElementById('stat-mapel').innerText = data.mapel.length;
+          document.getElementById('stat-jurnal').innerText = data.totalJurnal;
+
+          ['pres-kelas', 'jrn-kelas', 'nil-kelas', 'rek-kelas'].forEach(id => {
+            const el = document.getElementById(id);
+            data.kelas.forEach(k => {
+              const nama = k.Nama_Kelas || k.ID_Kelas;
+              if (nama) el.innerHTML += `<option value="${nama}">${nama}</option>`;
+            });
+          });
+
+          ['pres-mapel', 'jrn-mapel', 'nil-mapel', 'rek-mapel'].forEach(id => {
+            const el = document.getElementById(id);
+            data.mapel.forEach(m => {
+              const idM = m.ID_Mapel;
+              const nmM = m.Nama_Mapel ? `${m.ID_Mapel} - ${m.Nama_Mapel}` : idM;
+              if (idM) el.innerHTML += `<option value="${idM}">${nmM}</option>`;
+            });
+          });
+
+          renderJadwalHariIni();
+        } else {
+          throw new Error(data.message || 'Respons API tidak valid');
+        }
+      } catch (err) {
+        console.error(err);
+        statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color:#f87171;"></i> Gagal koneksi Google Drive';
+        document.getElementById('tbody-jadwal-hari-ini').innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align:center; color:#ef4444; line-height:1.6;">
+              <strong>Gagal terhubung ke API Google Drive.</strong><br>
+              Pastikan Deploy Apps Script diatur ke <strong>Anyone (Siapa saja)</strong> pada akun Google pribadi atau domain yang mengizinkan akses publik.
+            </td>
+          </tr>`;
+      }
+    };
+
+    function renderJadwalHariIni() {
+      const tbody = document.getElementById('tbody-jadwal-hari-ini');
+      const jadwalToday = MASTER_DATA.jadwal.filter(j => String(j.Hari).trim().toLowerCase() === namaHari.toLowerCase());
+      if (jadwalToday.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--muted);">Tidak ada jadwal mengajar pada hari ${namaHari}.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = '';
+      jadwalToday.forEach(j => {
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>Jam ke-${j.Jam_Ke}</strong></td>
+            <td>${j.Kelas}</td>
+            <td>${j.ID_Mapel}</td>
+            <td><button class="btn" style="padding:6px 12px; font-size:12px;" onclick="quickPresensi('${j.Kelas}', '${j.ID_Mapel}')">Isi Presensi</button></td>
+          </tr>`;
+      });
+    }
+
+    function quickPresensi(kelas, mapel) {
+      switchModule('presensi');
+      document.getElementById('pres-kelas').value = kelas;
+      document.getElementById('pres-mapel').value = mapel;
+      renderPresensiCards();
+    }
+
+    function fixDrivePhoto(url) {
+      if (!url || String(url).trim() === '') return 'https://via.placeholder.com/150x200?text=No+Foto';
+      const match = String(url).match(/[-\w]{25,}/);
+      if (match && String(url).includes('drive.google.com')) {
+        return `https://drive.google.com/thumbnail?sz=w400&id=${match[0]}`;
+      }
+      return url;
+    }
+
+    function renderPresensiCards() {
+      const kelas = document.getElementById('pres-kelas').value;
+      const container = document.getElementById('presensi-cards-container');
+      const list = MASTER_DATA.siswa.filter(s => String(s.Kelas).trim() === kelas);
+      if (list.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:var(--alpa); padding:30px 0;">Tidak ada data siswa untuk kelas ${kelas}.</p>`;
+        return;
+      }
+      container.innerHTML = '';
+      list.forEach((s, idx) => {
+        const nis = s.NIS ? String(s.NIS) : `SWS-${idx + 1}`;
+        const nama = s.Nama_Lengkap || '';
+        const foto = s.Foto_URL || s.Foto_Siswa || '';
+        container.innerHTML += `
+          <div class="student-card" data-nama="${nama.toLowerCase()}" data-nis="${nis.toLowerCase()}" data-raw-nama="${nama}" data-raw-nis="${nis}">
+            <div class="photo-frame"><img src="${fixDrivePhoto(foto)}" loading="lazy" referrerpolicy="no-referrer"></div>
+            <div class="st-name">${nama}</div>
+            <div class="st-nis">ID: ${nis}</div>
+            <div class="radio-bar">
+              <label class="radio-opt" style="color:var(--hadir)"><input type="radio" name="st_${idx}" value="Hadir" checked> H</label>
+              <label class="radio-opt" style="color:var(--dispen)"><input type="radio" name="st_${idx}" value="Dispen"> D</label>
+              <label class="radio-opt" style="color:var(--sakit)"><input type="radio" name="st_${idx}" value="Sakit"> S</label>
+              <label class="radio-opt" style="color:var(--izin)"><input type="radio" name="st_${idx}" value="Izin"> I</label>
+              <label class="radio-opt" style="color:var(--alpa)"><input type="radio" name="st_${idx}" value="Alpa"> A</label>
+            </div>
+          </div>`;
+      });
+    }
+
+    function filterPresensiCards() {
+      const q = document.getElementById('pres-cari').value.toLowerCase();
+      document.querySelectorAll('.student-card').forEach(card => {
+        card.style.display = (card.dataset.nama.includes(q) || card.dataset.nis.includes(q)) ? '' : 'none';
+      });
+    }
+
+    async function postToDrive(payload) {
+      await fetch(API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    async function submitPresensi() {
+      const kelas = document.getElementById('pres-kelas').value;
+      const mapel = document.getElementById('pres-mapel').value;
+      const tanggal = document.getElementById('pres-tanggal').value;
+      if (!kelas || !mapel) return alert('Silakan pilih Kelas dan Mata Pelajaran!');
+
+      const cards = document.querySelectorAll('.student-card');
+      if (cards.length === 0) return alert('Daftar siswa kosong.');
+
+      const btn = document.getElementById('btn-simpan-presensi');
+      btn.disabled = true;
+      btn.innerText = 'MENGIRIM KE GOOGLE DRIVE...';
+
+      const records = [];
+      cards.forEach((card, idx) => {
+        const status = card.querySelector(`input[name="st_${idx}"]:checked`).value;
+        records.push({ nis: card.dataset.rawNis, nama: card.dataset.rawNama, status: status, keterangan: '' });
+      });
+
+      try {
+        await postToDrive({ action: 'simpanPresensi', tanggal, kelas, mapel, records });
+        alert('Presensi ' + records.length + ' siswa berhasil dikirim ke Google Drive!');
+        cards.forEach(c => c.style.opacity = '0.55');
+      } catch (e) {
+        alert('Gagal mengirim: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'KIRIM SEMUA ABSENSI';
+      }
+    }
+
+    function autoFillKehadiranJurnal() {
+      const kelas = document.getElementById('jrn-kelas').value;
+      const mapel = document.getElementById('jrn-mapel').value;
+      const key = kelas + '_' + mapel;
+      if (MASTER_DATA.presensiHariIni[key]) {
+        document.getElementById('jrn-hadir').value = MASTER_DATA.presensiHariIni[key].hadir;
+        document.getElementById('jrn-absen').value = MASTER_DATA.presensiHariIni[key].absen;
+      }
+    }
+
+    async function submitJurnal(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-simpan-jurnal');
+      btn.disabled = true;
+      btn.innerText = 'MENYIMPAN JURNAL...';
+
+      const record = {
+        tanggal: document.getElementById('jrn-tanggal').value,
+        kelas: document.getElementById('jrn-kelas').value,
+        mapel: document.getElementById('jrn-mapel').value,
+        jamKe: document.getElementById('jrn-jam').value,
+        hadir: document.getElementById('jrn-hadir').value,
+        absen: document.getElementById('jrn-absen').value,
+        materi: document.getElementById('jrn-materi').value,
+        catatan: document.getElementById('jrn-catatan').value
+      };
+
+      try {
+        await postToDrive({ action: 'simpanJurnal', record });
+        alert('Jurnal Mengajar KBM berhasil disimpan ke Google Drive!');
+        document.getElementById('jrn-materi').value = '';
+        document.getElementById('jrn-catatan').value = '';
+      } catch (e) {
+        alert('Gagal menyimpan jurnal: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'SIMPAN JURNAL MENGAJAR';
+      }
+    }
+
+    function renderNilaiTable() {
+      const kelas = document.getElementById('nil-kelas').value;
+      const tbody = document.getElementById('tbody-nilai');
+      const list = MASTER_DATA.siswa.filter(s => String(s.Kelas).trim() === kelas);
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--alpa);">Tidak ada siswa di kelas ${kelas}.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = '';
+      list.forEach((s, idx) => {
+        const nis = s.NIS ? String(s.NIS) : `SWS-${idx + 1}`;
+        tbody.innerHTML += `
+          <tr class="nilai-row" data-nis="${nis}" data-nama="${s.Nama_Lengkap}">
+            <td>${idx + 1}</td><td>${nis}</td><td><strong>${s.Nama_Lengkap}</strong></td>
+            <td><input type="number" class="input-skor" min="0" max="100" placeholder="0-100"></td>
+          </tr>`;
+      });
+    }
+
+    async function submitNilai() {
+      const kelas = document.getElementById('nil-kelas').value;
+      const mapel = document.getElementById('nil-mapel').value;
+      const jenis = document.getElementById('nil-jenis').value;
+      if (!kelas || !mapel || !jenis) return alert('Lengkapi Kelas, Mata Pelajaran, dan Jenis Penilaian!');
+
+      const records = [];
+      document.querySelectorAll('.nilai-row').forEach(row => {
+        const val = row.querySelector('.input-skor').value;
+        if (val !== '') records.push({ nis: row.dataset.nis, nama: row.dataset.nama, nilai: Number(val) });
+      });
+      if (records.length === 0) return alert('Isi minimal satu nilai siswa.');
+
+      const btn = document.getElementById('btn-simpan-nilai');
+      btn.disabled = true;
+      btn.innerText = 'MENYIMPAN NILAI...';
+
+      try {
+        await postToDrive({ action: 'simpanNilai', tanggal: todayISO, kelas, mapel, jenis, records });
+        alert('Nilai ' + records.length + ' siswa berhasil disimpan ke Google Drive!');
+      } catch (e) {
+        alert('Gagal menyimpan nilai: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'SIMPAN SEMUA NILAI';
+      }
+    }
+
+    async function loadRekapLaporan() {
+      const kelas = document.getElementById('rek-kelas').value;
+      const mapel = document.getElementById('rek-mapel').value;
+      const semester = document.getElementById('rek-semester').value;
+
+      if (!kelas || !mapel) {
+        return alert('Silakan pilih Kelas dan Mata Pelajaran terlebih dahulu!');
+      }
+
+      const container = document.getElementById('rekap-matrix-container');
+      container.innerHTML = `<p style="text-align:center; padding:24px 0;"><i class="fa-solid fa-spinner fa-spin"></i> Menyusun matriks 16 pertemuan dari Google Drive...</p>`;
+
+      try {
+        const res = await fetch(`${API_URL}?action=getLaporanPresensi&kelas=${encodeURIComponent(kelas)}&mapel=${encodeURIComponent(mapel)}&bulan=`, {
+          method: 'GET',
+          redirect: 'follow'
+        });
+        const data = await res.json();
+        const allRows = data.rows || [];
+
+        const semRows = allRows.filter(r => {
+          if (!r.Tanggal) return false;
+          const bulanAngka = parseInt(String(r.Tanggal).split('-')[1], 10);
+          return semester === 'Ganjil' ? (bulanAngka >= 7 && bulanAngka <= 12) : (bulanAngka >= 1 && bulanAngka <= 6);
+        });
+
+        const uniqueDates = [...new Set(semRows.map(r => String(r.Tanggal).substring(0, 10)))].sort();
+        const totalCols = Math.max(16, uniqueDates.length);
+
+        const siswaKelas = MASTER_DATA.siswa
+          .filter(s => String(s.Kelas).trim() === kelas)
+          .sort((a, b) => String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)));
+
+        if (siswaKelas.length === 0) {
+          container.innerHTML = `<p style="text-align:center; color:var(--alpa);">Data siswa untuk kelas ${kelas} tidak ditemukan.</p>`;
+          return;
+        }
+
+        const kodeMap = { Hadir: 'H', Dispen: 'D', Sakit: 'S', Izin: 'I', Alpa: 'A' };
+        const statusMap = {};
+        semRows.forEach(r => {
+          const keySiswa = String(r.NIS || r.Nama_Siswa).trim();
+          const tgl = String(r.Tanggal).substring(0, 10);
+          if (!statusMap[keySiswa]) statusMap[keySiswa] = {};
+          statusMap[keySiswa][tgl] = kodeMap[r.Status] || r.Status;
+        });
+
+        document.getElementById('rekap-header-info').style.display = 'block';
+        document.getElementById('lbl-rek-sem').innerText = semester.toUpperCase();
+        document.getElementById('lbl-rek-kls').innerText = kelas;
+        document.getElementById('lbl-rek-mpl').innerText = mapel;
+
+        let html = `<table class="matrix-table"><thead>`;
+        html += `<tr class="matrix-head-main">
+          <th rowspan="2" style="width:32px;">No</th>
+          <th rowspan="2" style="min-width:190px; text-align:left; padding-left:8px;">Nama Siswa</th>`;
+
+        for (let i = 0; i < totalCols; i++) {
+          html += `<th style="min-width:34px;">${i + 1}</th>`;
+        }
+
+        html += `
+          <th rowspan="2" class="th-h">H</th>
+          <th rowspan="2" class="th-d">D</th>
+          <th rowspan="2" class="th-s">S</th>
+          <th rowspan="2" class="th-i">I</th>
+          <th rowspan="2" class="th-a">A</th>
+          <th rowspan="2" class="th-pct">% Hadir</th>
+        </tr>`;
+
+        html += `<tr class="matrix-head-date">`;
+        for (let i = 0; i < totalCols; i++) {
+          if (uniqueDates[i]) {
+            const parts = uniqueDates[i].split('-');
+            html += `<th title="${uniqueDates[i]}">${parts[2]}/${parts[1]}</th>`;
+          } else {
+            html += `<th>-</th>`;
+          }
+        }
+        html += `</tr></thead><tbody>`;
+
+        const hadirPerPertemuan = new Array(totalCols).fill(0);
+
+        siswaKelas.forEach((s, idx) => {
+          const nis = String(s.NIS || '').trim();
+          const nama = String(s.Nama_Lengkap || '').trim();
+          const rec = statusMap[nis] || statusMap[nama] || {};
+
+          let cntH = 0, cntD = 0, cntS = 0, cntI = 0, cntA = 0;
+
+          html += `<tr>
+            <td>${idx + 1}</td>
+            <td class="col-nama">${nama}</td>`;
+
+          for (let i = 0; i < totalCols; i++) {
+            const tgl = uniqueDates[i];
+            const st = tgl ? (rec[tgl] || '') : '';
+            if (st === 'H') { cntH++; hadirPerPertemuan[i]++; }
+            else if (st === 'D') { cntD++; hadirPerPertemuan[i]++; }
+            else if (st === 'S') cntS++;
+            else if (st === 'I') cntI++;
+            else if (st === 'A') cntA++;
+
+            html += `<td class="st-cell st-${st}">${st}</td>`;
+          }
+
+          const totalEfektif = uniqueDates.length;
+          const pctHadir = totalEfektif > 0 ? Math.round(((cntH + cntD) / totalEfektif) * 100) + '%' : '0%';
+
+          html += `
+            <td><strong>${cntH}</strong></td>
+            <td><strong>${cntD}</strong></td>
+            <td><strong>${cntS}</strong></td>
+            <td><strong>${cntI}</strong></td>
+            <td><strong>${cntA}</strong></td>
+            <td><strong>${pctHadir}</strong></td>
+          </tr>`;
+        });
+
+        html += `</tbody><tfoot><tr class="matrix-footer">
+          <td colspan="2" style="text-align:right; padding-right:10px;">Jumlah Hadir per Pertemuan</td>`;
+        for (let i = 0; i < totalCols; i++) {
+          html += `<td>${uniqueDates[i] ? hadirPerPertemuan[i] : 0}</td>`;
+        }
+        html += `<td colspan="6"></td></tr></tfoot></table>`;
+
+        container.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p style="text-align:center; color:var(--alpa);">Gagal memuat data rekap semester.</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
