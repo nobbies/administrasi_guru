@@ -6,6 +6,7 @@
   <title>Administrasi Guru SMK</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232563eb'/><path d='M50 22L14 40l36 18 30-15v21h6V40L50 22zm-22 29v15c0 8 10 14 22 14s22-6 22-14V51L50 62 28 51z' fill='white'/></svg>">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --bg: #f1f5f9;
@@ -58,6 +59,7 @@
       background: var(--navy); color: white; z-index: 999;
       transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex; flex-direction: column; box-shadow: -8px 0 24px rgba(0,0,0,0.3);
+      overflow-y: auto;
     }
     .drawer-panel.active { right: 0; }
     .drawer-head {
@@ -96,7 +98,7 @@
     select:focus, input:focus, textarea:focus { border-color: var(--primary); background: white; }
     input[disabled] { background: #e2e8f0; color: #475569; cursor: not-allowed; font-weight: 600; }
 
-    /* Tabel Matriks Rekap Presensi Semester */
+    /* Tabel Matriks Rekap Presensi Semester & Jurnal */
     .matrix-table {
       width: 100%;
       border-collapse: collapse;
@@ -155,6 +157,51 @@
       font-weight: 700;
       font-size: 11px;
     }
+
+    /* Tabel Leger Laporan Nilai */
+    .leger-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      background: white;
+      color: #000;
+    }
+    .leger-table th, .leger-table td {
+      border: 1.5px solid #000000 !important;
+      padding: 5px 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .leger-table th {
+      background: #f8fafc;
+      font-weight: 800;
+      color: #000000;
+    }
+    .vertical-th {
+      padding: 8px 4px !important;
+      min-width: 32px;
+      height: 85px;
+      vertical-align: middle;
+    }
+    .vertical-th span {
+      display: inline-block;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      letter-spacing: 0.5px;
+    }
+    .leger-table td.col-nama-leger {
+      text-align: left;
+      padding-left: 8px;
+      padding-right: 12px;
+      font-weight: 600;
+      position: sticky;
+      left: 0;
+      background: white;
+      z-index: 2;
+    }
+    .leger-table tr:nth-child(even) td.col-nama-leger { background: #f8fafc; }
+    .leger-table tr:nth-child(even) { background: #f8fafc; }
+    .nilai-kurang { color: #dc2626; font-weight: 700; background: #fee2e2; }
 
     @media print {
       header, .floating-footer, .no-print { display: none !important; }
@@ -237,6 +284,7 @@
     .btn:hover { background: var(--primary-dark); }
     .btn:disabled { background: #94a3b8; cursor: not-allowed; }
     .btn-success { background: var(--hadir); }
+    .btn-success:hover { background: #059669; }
 
     .floating-footer {
       position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.92);
@@ -245,47 +293,6 @@
     }
     .btn-float { width: 100%; max-width: 420px; border-radius: 30px; padding: 14px; }
     .hidden { display: none !important; }
-
-    /* Tabel Leger Laporan Nilai */
-    .leger-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
-      background: white;
-      color: #000;
-    }
-    .leger-table th, .leger-table td {
-      border: 1.5px solid #0f172a;
-      padding: 5px 4px;
-      text-align: center;
-      white-space: nowrap;
-    }
-    .leger-table th {
-      background: #f8fafc;
-      font-weight: 800;
-      color: #0f172a;
-    }
-    .vertical-th {
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
-      padding: 8px 4px !important;
-      min-width: 30px;
-      letter-spacing: 0.5px;
-    }
-    .leger-table td.col-nama-leger {
-      text-align: left;
-      padding-left: 8px;
-      padding-right: 12px;
-      font-weight: 600;
-      position: sticky;
-      left: 0;
-      background: white;
-      z-index: 2;
-    }
-    .leger-table tr:nth-child(even) td.col-nama-leger { background: #f8fafc; }
-    .leger-table tr:nth-child(even) { background: #f8fafc; }
-    .nilai-kurang { color: #dc2626; font-weight: 700; background: #fee2e2; }
-  
   </style>
 </head>
 <body>
@@ -334,7 +341,7 @@
     </nav>
 
     <div class="drawer-label" style="margin-top: 10px; border-top: 1px solid var(--navy-light); padding-top: 16px;">LAPORAN</div>
-    <nav class="drawer-nav">
+    <nav class="drawer-nav" style="padding-bottom: 24px;">
       <button class="nav-btn" id="nav-rekap" onclick="switchModule('rekap')">
         <i class="fa-solid fa-table-cells" style="width:18px; color:#38bdf8;"></i> Laporan Presensi
       </button>
@@ -456,10 +463,10 @@
       </div>
     </section>
 
-    <!-- MODUL 5: REKAP LAPORAN SEMESTER (16 PERTEMUAN) -->
+    <!-- MODUL 5: LAPORAN PRESENSI SEMESTER (16 PERTEMUAN) -->
     <section id="mod-rekap" class="module-pane hidden">
       <div class="card no-print">
-        <div class="section-title"><i class="fa-solid fa-table-cells" style="color:#4c1d95;"></i> Rekap Presensi Semester (16 Pertemuan)</div>
+        <div class="section-title"><i class="fa-solid fa-table-cells" style="color:#4c1d95;"></i> Laporan Presensi Semester (16 Pertemuan)</div>
         <div class="form-grid">
           <div>
             <label>Pilih Kelas (Wajib)</label>
@@ -579,6 +586,7 @@
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button class="btn" style="background:#7e22ce;" onclick="loadLaporanNilai()"><i class="fa-solid fa-magnifying-glass"></i> Tampilkan Leger Nilai</button>
+          <button class="btn btn-success" onclick="exportLegerExcel()"><i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)</button>
           <button class="btn" style="background:#475569;" onclick="window.print()"><i class="fa-solid fa-print"></i> Cetak / Simpan PDF</button>
         </div>
       </div>
@@ -594,7 +602,6 @@
         </div>
       </div>
     </section>
-    
   </main>
 
   <script>
@@ -872,6 +879,7 @@
       }
     }
 
+    // LAPORAN 1: REKAP PRESENSI SEMESTER (16 PERTEMUAN)
     async function loadRekapLaporan() {
       const kelas = document.getElementById('rek-kelas').value;
       const mapel = document.getElementById('rek-mapel').value;
@@ -1005,6 +1013,7 @@
       }
     }
 
+    // LAPORAN 2: JURNAL MENGAJAR (KBM)
     async function loadLaporanJurnal() {
       const kelas = document.getElementById('lapjrn-kelas').value;
       const mapel = document.getElementById('lapjrn-mapel').value;
@@ -1049,6 +1058,7 @@
       }
     }
 
+    // LAPORAN 3: LEGER NILAI PESERTA DIDIK & EXPORT EXCEL
     async function loadLaporanNilai() {
       const kelas = document.getElementById('lapnil-kelas').value;
       const mapel = document.getElementById('lapnil-mapel').value;
@@ -1078,7 +1088,6 @@
           return;
         }
 
-        // Pemetaan nilai terakhir per siswa & jenis penilaian
         const nilaiMap = {};
         rows.forEach(r => {
           const keySiswa = String(r.NIS || r.Nama_Siswa).trim();
@@ -1092,17 +1101,16 @@
         document.getElementById('lbl-lapnil-mpl').innerText = mapel;
         document.getElementById('lbl-lapnil-kkm').innerText = kkm;
 
-        // Bangun Header 4 Tingkat Persis Seperti Gambar Referensi
-        let html = `<table class="leger-table">
+        let html = `<table id="tabel-leger-nilai" class="leger-table">
           <thead>
             <tr>
               <th rowspan="4" style="width:32px;">No.</th>
               <th rowspan="4" style="width:65px;">NIS.</th>
               <th rowspan="4" style="min-width:200px;">Nama Peserta Didik</th>
               <th colspan="14">NILAI</th>
-              <th rowspan="4" class="vertical-th">RPH</th>
-              <th rowspan="4" class="vertical-th">UTS</th>
-              <th rowspan="4" class="vertical-th">UAS</th>
+              <th rowspan="4" class="vertical-th"><span>RPH</span></th>
+              <th rowspan="4" class="vertical-th"><span>UTS</span></th>
+              <th rowspan="4" class="vertical-th"><span>UAS</span></th>
               <th rowspan="4" style="min-width:42px;">NR</th>
               <th rowspan="4" style="min-width:42px;">Pred</th>
             </tr>
@@ -1157,16 +1165,13 @@
             }
           });
 
-          // Hitung RPH (Rata-rata Tugas & PH yang terisi)
           const rph = countHarian > 0 ? Math.round(sumHarian / countHarian) : '';
           const uts = (sc['UTS'] !== undefined && !isNaN(sc['UTS'])) ? sc['UTS'] : '';
           const uas = (sc['UAS'] !== undefined && !isNaN(sc['UAS'])) ? sc['UAS'] : '';
 
-          // Hitung Nilai Rapor (NR): Rata-rata dari komponen RPH, UTS, UAS yang terisi
           const kompNR = [rph, uts, uas].filter(v => v !== '');
           const nr = kompNR.length > 0 ? Math.round(kompNR.reduce((a, b) => a + b, 0) / kompNR.length) : '';
 
-          // Predikat Otomatis
           let pred = '';
           if (nr !== '') {
             if (nr >= 90) pred = 'A';
@@ -1190,6 +1195,41 @@
         console.error(err);
         container.innerHTML = `<p style="text-align:center; color:var(--alpa);">Gagal memuat laporan nilai. Pastikan Code.gs sudah di-deploy versi terbaru.</p>`;
       }
+    }
+
+    function exportLegerExcel() {
+      const table = document.getElementById('tabel-leger-nilai');
+      if (!table) {
+        return alert('Silakan tampilkan Leger Nilai terlebih dahulu sebelum melakukan export!');
+      }
+
+      const kelas = document.getElementById('lapnil-kelas').value || 'Kelas';
+      const mapel = document.getElementById('lapnil-mapel').value || 'Mapel';
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.table_to_sheet(table, { raw: true });
+
+      ws['!cols'] = [
+        { wch: 5 },
+        { wch: 12 },
+        { wch: 32 },
+        { wch: 5 }, { wch: 5 },
+        { wch: 5 }, { wch: 5 },
+        { wch: 5 }, { wch: 5 },
+        { wch: 5 }, { wch: 5 },
+        { wch: 5 }, { wch: 5 },
+        { wch: 5 }, { wch: 5 },
+        { wch: 5 }, { wch: 5 },
+        { wch: 6 },
+        { wch: 6 },
+        { wch: 6 },
+        { wch: 6 },
+        { wch: 6 }
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Leger_Nilai');
+      const fileName = `Leger_Nilai_${kelas.replace(/\s+/g, '_')}_${mapel.replace(/\s+/g, '_')}.xlsx`;
+      XLSX.writeFile(wb, fileName);
     }
   </script>
 </body>
