@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Administrasi Guru SMK</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232563eb'/><path d='M50 22L14 40l36 18 30-15v21h6V40L50 22zm-22 29v15c0 8 10 14 22 14s22-6 22-14V51L50 62 28 51z' fill='white'/></svg>">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
     :root {
@@ -244,6 +245,47 @@
     }
     .btn-float { width: 100%; max-width: 420px; border-radius: 30px; padding: 14px; }
     .hidden { display: none !important; }
+
+    /* Tabel Leger Laporan Nilai */
+    .leger-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      background: white;
+      color: #000;
+    }
+    .leger-table th, .leger-table td {
+      border: 1.5px solid #0f172a;
+      padding: 5px 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .leger-table th {
+      background: #f8fafc;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .vertical-th {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      padding: 8px 4px !important;
+      min-width: 30px;
+      letter-spacing: 0.5px;
+    }
+    .leger-table td.col-nama-leger {
+      text-align: left;
+      padding-left: 8px;
+      padding-right: 12px;
+      font-weight: 600;
+      position: sticky;
+      left: 0;
+      background: white;
+      z-index: 2;
+    }
+    .leger-table tr:nth-child(even) td.col-nama-leger { background: #f8fafc; }
+    .leger-table tr:nth-child(even) { background: #f8fafc; }
+    .nilai-kurang { color: #dc2626; font-weight: 700; background: #fee2e2; }
+  
   </style>
 </head>
 <body>
@@ -298,6 +340,9 @@
       </button>
       <button class="nav-btn" id="nav-lap-jurnal" onclick="switchModule('lap-jurnal')">
         <i class="fa-solid fa-file-contract" style="width:18px; color:#fb923c;"></i> Laporan Jurnal
+      </button>
+      <button class="nav-btn" id="nav-lap-nilai" onclick="switchModule('lap-nilai')">
+        <i class="fa-solid fa-table-list" style="width:18px; color:#a855f7;"></i> Laporan Nilai
       </button>
     </nav>
   </aside>
@@ -379,13 +424,22 @@
             <label>Jenis Penilaian</label>
             <select id="nil-jenis">
               <option value="" selected disabled>Pilih...</option>
-              <option value="Tugas 1">Tugas 1</option>
-              <option value="Tugas 2">Tugas 2</option>
-              <option value="Formatif / UH 1">Formatif / UH 1</option>
-              <option value="Formatif / UH 2">Formatif / UH 2</option>
-              <option value="Sumatif Tengah Semester">Sumatif Tengah Semester</option>
-              <option value="Sumatif Akhir Semester">Sumatif Akhir Semester</option>
-              <option value="Proyek / Praktik">Proyek / Praktik</option>
+              <option value="T1">Tugas 1 (T1)</option>
+              <option value="PH1">Penilaian Harian 1 (PH1)</option>
+              <option value="T2">Tugas 2 (T2)</option>
+              <option value="PH2">Penilaian Harian 2 (PH2)</option>
+              <option value="T3">Tugas 3 (T3)</option>
+              <option value="PH3">Penilaian Harian 3 (PH3)</option>
+              <option value="T4">Tugas 4 (T4)</option>
+              <option value="PH4">Penilaian Harian 4 (PH4)</option>
+              <option value="T5">Tugas 5 (T5)</option>
+              <option value="PH5">Penilaian Harian 5 (PH5)</option>
+              <option value="T6">Tugas 6 (T6)</option>
+              <option value="PH6">Penilaian Harian 6 (PH6)</option>
+              <option value="T7">Tugas 7 (T7)</option>
+              <option value="PH7">Penilaian Harian 7 (PH7)</option>
+              <option value="UTS">Sumatif Tengah Semester (UTS)</option>
+              <option value="UAS">Sumatif Akhir Semester (UAS)</option>
             </select>
           </div>
         </div>
@@ -500,6 +554,46 @@
         </div>
       </div>
     </section>
+
+    <!-- MODUL 7: LAPORAN NILAI (LEGER) -->
+    <section id="mod-lap-nilai" class="module-pane hidden">
+      <div class="card no-print">
+        <div class="section-title"><i class="fa-solid fa-table-list" style="color:#7e22ce;"></i> Laporan Nilai Peserta Didik (Leger)</div>
+        <div class="form-grid">
+          <div>
+            <label>Pilih Kelas (Wajib)</label>
+            <select id="lapnil-kelas">
+              <option value="" selected disabled>Pilih...</option>
+            </select>
+          </div>
+          <div>
+            <label>Pilih Mata Pelajaran (Wajib)</label>
+            <select id="lapnil-mapel">
+              <option value="" selected disabled>Pilih...</option>
+            </select>
+          </div>
+          <div>
+            <label>KKTP / KKM (Batas Tuntas)</label>
+            <input type="number" id="lapnil-kkm" value="75" min="0" max="100">
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn" style="background:#7e22ce;" onclick="loadLaporanNilai()"><i class="fa-solid fa-magnifying-glass"></i> Tampilkan Leger Nilai</button>
+          <button class="btn" style="background:#475569;" onclick="window.print()"><i class="fa-solid fa-print"></i> Cetak / Simpan PDF</button>
+        </div>
+      </div>
+
+      <div class="card" style="padding:14px;">
+        <div id="lapnil-header-info" style="margin-bottom:12px; display:none;">
+          <h3 style="font-size:15px; color:#0f172a; margin-bottom:2px;">DAFTAR NILAI PESERTA DIDIK</h3>
+          <p style="font-size:12px; color:#475569;">Kelas: <strong id="lbl-lapnil-kls"></strong> | Mata Pelajaran: <strong id="lbl-lapnil-mpl"></strong> | KKTP: <strong id="lbl-lapnil-kkm"></strong></p>
+        </div>
+
+        <div class="table-wrap" id="leger-nilai-container">
+          <p style="text-align:center; color:var(--muted); padding:24px 0;">Pilih Kelas dan Mata Pelajaran lalu klik <strong>Tampilkan Leger Nilai</strong>.</p>
+        </div>
+      </div>
+    </section>
     
   </main>
 
@@ -545,7 +639,7 @@
           document.getElementById('stat-mapel').innerText = data.mapel.length;
           document.getElementById('stat-jurnal').innerText = data.totalJurnal;
 
-          ['pres-kelas', 'jrn-kelas', 'nil-kelas', 'rek-kelas', 'lapjrn-kelas'].forEach(id => {
+          ['pres-kelas', 'jrn-kelas', 'nil-kelas', 'rek-kelas', 'lapjrn-kelas', 'lapnil-kelas'].forEach(id => {
             const el = document.getElementById(id);
             data.kelas.forEach(k => {
               const nama = k.Nama_Kelas || k.ID_Kelas;
@@ -553,7 +647,7 @@
             });
           });
 
-          ['pres-mapel', 'jrn-mapel', 'nil-mapel', 'rek-mapel', 'lapjrn-mapel'].forEach(id => {
+          ['pres-mapel', 'jrn-mapel', 'nil-mapel', 'rek-mapel', 'lapjrn-mapel', 'lapnil-mapel'].forEach(id => {
             const el = document.getElementById(id);
             data.mapel.forEach(m => {
               const idM = m.ID_Mapel;
@@ -952,6 +1046,149 @@
       } catch (err) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--alpa); padding:20px;">Gagal memuat laporan jurnal. Pastikan Code.gs sudah di-deploy versi terbaru.</td></tr>`;
+      }
+    }
+
+    async function loadLaporanNilai() {
+      const kelas = document.getElementById('lapnil-kelas').value;
+      const mapel = document.getElementById('lapnil-mapel').value;
+      const kkm = Number(document.getElementById('lapnil-kkm').value) || 75;
+
+      if (!kelas || !mapel) {
+        return alert('Silakan pilih Kelas dan Mata Pelajaran terlebih dahulu!');
+      }
+
+      const container = document.getElementById('leger-nilai-container');
+      container.innerHTML = `<p style="text-align:center; padding:24px 0;"><i class="fa-solid fa-spinner fa-spin"></i> Menyusun leger nilai dari Google Drive...</p>`;
+
+      try {
+        const res = await fetch(`${API_URL}?action=getLaporanNilai&kelas=${encodeURIComponent(kelas)}&mapel=${encodeURIComponent(mapel)}`, {
+          method: 'GET',
+          redirect: 'follow'
+        });
+        const data = await res.json();
+        const rows = data.rows || [];
+
+        const siswaKelas = MASTER_DATA.siswa
+          .filter(s => String(s.Kelas).trim() === kelas)
+          .sort((a, b) => String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)));
+
+        if (siswaKelas.length === 0) {
+          container.innerHTML = `<p style="text-align:center; color:var(--alpa);">Data siswa untuk kelas ${kelas} tidak ditemukan.</p>`;
+          return;
+        }
+
+        // Pemetaan nilai terakhir per siswa & jenis penilaian
+        const nilaiMap = {};
+        rows.forEach(r => {
+          const keySiswa = String(r.NIS || r.Nama_Siswa).trim();
+          const jenis = String(r.Jenis_Penilaian || '').trim();
+          if (!nilaiMap[keySiswa]) nilaiMap[keySiswa] = {};
+          nilaiMap[keySiswa][jenis] = Number(r.Nilai);
+        });
+
+        document.getElementById('lapnil-header-info').style.display = 'block';
+        document.getElementById('lbl-lapnil-kls').innerText = kelas;
+        document.getElementById('lbl-lapnil-mpl').innerText = mapel;
+        document.getElementById('lbl-lapnil-kkm').innerText = kkm;
+
+        // Bangun Header 4 Tingkat Persis Seperti Gambar Referensi
+        let html = `<table class="leger-table">
+          <thead>
+            <tr>
+              <th rowspan="4" style="width:32px;">No.</th>
+              <th rowspan="4" style="width:65px;">NIS.</th>
+              <th rowspan="4" style="min-width:200px;">Nama Peserta Didik</th>
+              <th colspan="14">NILAI</th>
+              <th rowspan="4" class="vertical-th">RPH</th>
+              <th rowspan="4" class="vertical-th">UTS</th>
+              <th rowspan="4" class="vertical-th">UAS</th>
+              <th rowspan="4" style="min-width:42px;">NR</th>
+              <th rowspan="4" style="min-width:42px;">Pred</th>
+            </tr>
+            <tr>
+              <th colspan="14">Tugas (T) dan Penilaian Harian (PH)</th>
+            </tr>
+            <tr>
+              <th colspan="2">PH1</th>
+              <th colspan="2">PH2</th>
+              <th colspan="2">PH3</th>
+              <th colspan="2">PH4</th>
+              <th colspan="2">PH5</th>
+              <th colspan="2">PH6</th>
+              <th colspan="2">PH7</th>
+            </tr>
+            <tr>
+              <th style="min-width:28px;">T1</th><th style="min-width:30px;">PH1</th>
+              <th style="min-width:28px;">T2</th><th style="min-width:30px;">PH2</th>
+              <th style="min-width:28px;">T3</th><th style="min-width:30px;">PH3</th>
+              <th style="min-width:28px;">T4</th><th style="min-width:30px;">PH4</th>
+              <th style="min-width:28px;">T5</th><th style="min-width:30px;">PH5</th>
+              <th style="min-width:28px;">T6</th><th style="min-width:30px;">PH6</th>
+              <th style="min-width:28px;">T7</th><th style="min-width:30px;">PH7</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+        const kolomList = ['T1', 'PH1', 'T2', 'PH2', 'T3', 'PH3', 'T4', 'PH4', 'T5', 'PH5', 'T6', 'PH6', 'T7', 'PH7'];
+
+        siswaKelas.forEach((s, idx) => {
+          const nis = String(s.NIS || '').trim();
+          const nama = String(s.Nama_Lengkap || '').trim();
+          const sc = nilaiMap[nis] || nilaiMap[nama] || {};
+
+          html += `<tr>
+            <td>${idx + 1}</td>
+            <td>${nis || '-'}</td>
+            <td class="col-nama-leger">${nama}</td>`;
+
+          let sumHarian = 0;
+          let countHarian = 0;
+
+          kolomList.forEach(k => {
+            const val = sc[k];
+            if (val !== undefined && !isNaN(val)) {
+              sumHarian += val;
+              countHarian++;
+              const cls = val < kkm ? 'nilai-kurang' : '';
+              html += `<td class="${cls}">${val}</td>`;
+            } else {
+              html += `<td></td>`;
+            }
+          });
+
+          // Hitung RPH (Rata-rata Tugas & PH yang terisi)
+          const rph = countHarian > 0 ? Math.round(sumHarian / countHarian) : '';
+          const uts = (sc['UTS'] !== undefined && !isNaN(sc['UTS'])) ? sc['UTS'] : '';
+          const uas = (sc['UAS'] !== undefined && !isNaN(sc['UAS'])) ? sc['UAS'] : '';
+
+          // Hitung Nilai Rapor (NR): Rata-rata dari komponen RPH, UTS, UAS yang terisi
+          const kompNR = [rph, uts, uas].filter(v => v !== '');
+          const nr = kompNR.length > 0 ? Math.round(kompNR.reduce((a, b) => a + b, 0) / kompNR.length) : '';
+
+          // Predikat Otomatis
+          let pred = '';
+          if (nr !== '') {
+            if (nr >= 90) pred = 'A';
+            else if (nr >= 80) pred = 'B';
+            else if (nr >= kkm) pred = 'C';
+            else pred = 'D';
+          }
+
+          html += `
+            <td><strong>${rph}</strong></td>
+            <td class="${uts !== '' && uts < kkm ? 'nilai-kurang' : ''}">${uts}</td>
+            <td class="${uas !== '' && uas < kkm ? 'nilai-kurang' : ''}">${uas}</td>
+            <td style="background:#f1f5f9;"><strong>${nr}</strong></td>
+            <td><strong>${pred}</strong></td>
+          </tr>`;
+        });
+
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p style="text-align:center; color:var(--alpa);">Gagal memuat laporan nilai. Pastikan Code.gs sudah di-deploy versi terbaru.</p>`;
       }
     }
   </script>
