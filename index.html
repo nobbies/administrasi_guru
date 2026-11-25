@@ -374,6 +374,18 @@
           <p style="color:var(--muted); font-size:13px;">Memuat statistik kehadiran...</p>
         </div>
       </div>
+
+      <div class="card">
+        <div class="section-title"><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> Jadwal Mengajar Hari Ini (<span id="hari-ini-label"></span>)</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Jam Ke</th><th>Kelas</th><th>Mata Pelajaran</th><th>Aksi Cepat</th></tr></thead>
+            <tbody id="tbody-jadwal-hari-ini">
+              <tr><td colspan="4" style="text-align:center; color:var(--muted);">Memuat jadwal...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- MODUL 2: PRESENSI VISUAL -->
@@ -604,7 +616,15 @@
   </main>
 
   <script>
-    let MASTER_DATA = { kelas: [], mapel: [], jadwal: [], siswa: [], presensiHariIni: {}, totalJurnal: 0 };
+    let MASTER_DATA = {
+      kelas: [],
+      mapel: [],
+      jadwal: [],
+      siswa: [],
+      presensiHariIni: {},
+      totalJurnal: 0,
+      presensiStats: { persenGlobal: 0, perKelas: {} }
+    };
 
     const now = new Date();
     const todayISO = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
@@ -644,6 +664,7 @@
           document.getElementById('stat-siswa').innerText = data.siswa.length;
           document.getElementById('stat-mapel').innerText = data.mapel.length;
           document.getElementById('stat-jurnal').innerText = data.totalJurnal;
+
           const statsHadir = data.presensiStats || { persenGlobal: 0, perKelas: {} };
           document.getElementById('stat-kehadiran').innerText = statsHadir.persenGlobal + '%';
           renderDashboardKehadiran(statsHadir.perKelas);
@@ -682,6 +703,45 @@
       }
     };
 
+    function renderDashboardKehadiran(perKelas) {
+      const container = document.getElementById('dashboard-kehadiran-container');
+      const daftarKelas = MASTER_DATA.kelas || [];
+
+      if (daftarKelas.length === 0) {
+        container.innerHTML = `<p style="color:var(--muted); font-size:13px;">Belum ada data kelas.</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      daftarKelas.forEach(k => {
+        const namaKls = k.Nama_Kelas || k.ID_Kelas;
+        const info = perKelas[namaKls] || { total: 0, hadir: 0, sakit: 0, izin: 0, alpa: 0 };
+        const pct = info.total > 0 ? Math.round((info.hadir / info.total) * 100) : 0;
+
+        let barColor = 'var(--hadir)';
+        if (info.total === 0) barColor = '#94a3b8';
+        else if (pct < 75) barColor = 'var(--alpa)';
+        else if (pct < 85) barColor = 'var(--izin)';
+
+        container.innerHTML += `
+          <div style="border:1px solid var(--border); border-radius:12px; padding:12px 14px; background:#f8fafc;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="font-size:13px; color:var(--navy);">${namaKls}</strong>
+              <span style="font-size:13px; font-weight:800; color:${barColor};">${info.total > 0 ? pct + '%' : 'Belum ada data'}</span>
+            </div>
+            <div style="width:100%; height:8px; background:#e2e8f0; border-radius:99px; overflow:hidden; margin-bottom:8px;">
+              <div style="width:${pct}%; height:100%; background:${barColor}; border-radius:99px; transition:width 0.4s;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted);">
+              <span>H/D: <strong>${info.hadir}</strong></span>
+              <span>S: <strong>${info.sakit}</strong></span>
+              <span>I: <strong>${info.izin}</strong></span>
+              <span>A: <strong>${info.alpa}</strong></span>
+            </div>
+          </div>`;
+      });
+    }
+
     function renderJadwalHariIni() {
       const tbody = document.getElementById('tbody-jadwal-hari-ini');
       const jadwalToday = MASTER_DATA.jadwal.filter(j => String(j.Hari).trim().toLowerCase() === namaHari.toLowerCase());
@@ -701,46 +761,6 @@
       });
     }
 
-    function renderDashboardKehadiran(perKelas) {
-   const container = document.getElementById('dashboard-kehadiran-container');
-   const daftarKelas = MASTER_DATA.kelas || [];
-
-   if (daftarKelas.length === 0) {
-     container.innerHTML = `<p style="color:var(--muted); font-size:13px;">Belum ada data kelas.</p>`;
-     return;
-   }
-
-   container.innerHTML = '';
-   daftarKelas.forEach(k => {
-     const namaKls = k.Nama_Kelas || k.ID_Kelas;
-     const info = perKelas[namaKls] || { total: 0, hadir: 0, sakit: 0, izin: 0, alpa: 0 };
-     const pct = info.total > 0 ? Math.round((info.hadir / info.total) * 100) : 0;
-
-     // Warna indikator otomatis berdasarkan persentase kehadiran
-     let barColor = 'var(--hadir)'; // >= 85% (Hijau)
-     if (info.total === 0) barColor = '#94a3b8'; // Belum ada data (Abu-abu)
-     else if (pct < 75) barColor = 'var(--alpa)'; // < 75% (Merah)
-     else if (pct < 85) barColor = 'var(--izin)'; // 75% - 84% (Kuning/Oranye)
-
-     container.innerHTML += `
-       <div style="border:1px solid var(--border); border-radius:12px; padding:12px 14px; background:#f8fafc;">
-         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-           <strong style="font-size:13px; color:var(--navy);">${namaKls}</strong>
-           <span style="font-size:13px; font-weight:800; color:${barColor};">${info.total > 0 ? pct + '%' : 'Belum ada data'}</span>
-         </div>
-         <div style="width:100%; height:8px; background:#e2e8f0; border-radius:99px; overflow:hidden; margin-bottom:8px;">
-           <div style="width:${pct}%; height:100%; background:${barColor}; border-radius:99px; transition:width 0.4s;"></div>
-         </div>
-         <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted);">
-           <span>H/D: <strong>${info.hadir}</strong></span>
-           <span>S: <strong>${info.sakit}</strong></span>
-           <span>I: <strong>${info.izin}</strong></span>
-           <span>A: <strong>${info.alpa}</strong></span>
-         </div>
-       </div>`;
-   });
- }
-    
     function quickPresensi(kelas, mapel) {
       switchModule('presensi');
       document.getElementById('pres-kelas').value = kelas;
