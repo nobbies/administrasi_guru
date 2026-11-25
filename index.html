@@ -28,6 +28,36 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
 
+    /* Layar Login Terkunci */
+    .login-overlay {
+      position: fixed; inset: 0; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .login-box {
+      background: white; width: 100%; max-width: 380px; border-radius: 20px;
+      padding: 32px 26px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    }
+    .login-icon {
+      width: 64px; height: 64px; background: #eff6ff; color: var(--primary);
+      border-radius: 18px; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin: 0 auto 16px;
+    }
+    .login-title { font-size: 20px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+    .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; line-height: 1.5; }
+    .pass-wrap { position: relative; margin-bottom: 14px; }
+    .pass-wrap input {
+      width: 100%; padding: 13px 44px 13px 14px; border: 1.5px solid #cbd5e1;
+      border-radius: 12px; font-size: 15px; text-align: center; letter-spacing: 2px; font-weight: 700;
+    }
+    .pass-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px;
+    }
+    .login-err {
+      background: #fee2e2; color: #dc2626; font-size: 12px; font-weight: 600;
+      padding: 10px; border-radius: 10px; margin-bottom: 14px; display: none;
+    }
+
     header {
       background: var(--navy); color: white; position: sticky; top: 0; z-index: 50;
       padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
@@ -204,13 +234,13 @@
     .nilai-kurang { color: #dc2626; font-weight: 700; background: #fee2e2; }
 
     @media print {
-      header, .floating-footer, .no-print { display: none !important; }
+      header, .floating-footer, .no-print, .login-overlay { display: none !important; }
       main { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
       .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
       body { background: white !important; padding-bottom: 0 !important; }
     }
 
-    /* Presensi Student Cards (1 Kartu per Baris, Mobile-Friendly) */
+    /* Presensi Student Cards */
     .student-grid {
       display: flex;
       flex-direction: column;
@@ -302,13 +332,34 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbzPtnz5DLtw_1n9E3NtQlb3HIQQDxf01ALhHtJwk-c8JoNpy11H-JdaRwFdnTFLkP8eZg/exec";
   </script>
 
+  <!-- LAYAR LOGIN GURU -->
+  <div id="login-screen" class="login-overlay">
+    <div class="login-box">
+      <div class="login-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="login-title">Administrasi Guru SMK</div>
+      <div class="login-sub">Masukkan Password / PIN Guru untuk membuka akses database presensi dan nilai.</div>
+      <div id="login-error-msg" class="login-err"></div>
+      <form onsubmit="handleLogin(event)">
+        <div class="pass-wrap">
+          <input type="password" id="login-pin-input" placeholder="••••••" required autocomplete="current-password">
+          <button type="button" class="pass-toggle" onclick="togglePassVisibility()" title="Lihat/Sembunyikan">
+            <i id="eye-icon" class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+        <button type="submit" id="btn-login-submit" class="btn" style="width:100%; padding:13px;">
+          <i class="fa-solid fa-right-to-bracket"></i> MASUK APLIKASI
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- HEADER -->
   <header>
     <div class="brand">
       <div class="brand-logo"><i class="fa-solid fa-chalkboard-user"></i></div>
       <div>
         <div class="brand-title">Administrasi Guru SMK</div>
-        <div class="brand-sub" id="sync-status"><i class="fa-solid fa-spinner fa-spin"></i> Menghubungkan Google Drive...</div>
+        <div class="brand-sub" id="sync-status"><i class="fa-solid fa-lock" style="color:#fbbf24;"></i> Menunggu otorisasi...</div>
       </div>
     </div>
     <button class="btn-drawer-toggle" onclick="toggleDrawer()" title="Menu Navigasi">
@@ -341,7 +392,7 @@
     </nav>
 
     <div class="drawer-label" style="margin-top: 10px; border-top: 1px solid var(--navy-light); padding-top: 16px;">LAPORAN</div>
-    <nav class="drawer-nav" style="padding-bottom: 24px;">
+    <nav class="drawer-nav">
       <button class="nav-btn" id="nav-rekap" onclick="switchModule('rekap')">
         <i class="fa-solid fa-table-cells" style="width:18px; color:#38bdf8;"></i> Laporan Presensi
       </button>
@@ -352,6 +403,12 @@
         <i class="fa-solid fa-table-list" style="width:18px; color:#a855f7;"></i> Laporan Nilai
       </button>
     </nav>
+
+    <div style="margin-top: auto; padding: 16px 12px 24px; border-top: 1px solid var(--navy-light);">
+      <button class="nav-btn" style="color:#f87171; width:100%;" onclick="logoutApp()">
+        <i class="fa-solid fa-right-from-bracket" style="width:18px;"></i> Keluar / Kunci Aplikasi
+      </button>
+    </div>
   </aside>
 
   <main>
@@ -616,6 +673,9 @@
   </main>
 
   <script>
+    const STORAGE_KEY_PIN = 'adm_guru_smk_pin';
+    let USER_PIN = localStorage.getItem(STORAGE_KEY_PIN) || '';
+
     let MASTER_DATA = {
       kelas: [],
       mapel: [],
@@ -635,6 +695,18 @@
     document.getElementById('lapjrn-bulan').value = todayISO.substring(0, 7);
     document.getElementById('hari-ini-label').innerText = namaHari;
 
+    function togglePassVisibility() {
+      const inp = document.getElementById('login-pin-input');
+      const icon = document.getElementById('eye-icon');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        inp.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+
     function toggleDrawer() {
       document.getElementById('drawer-panel').classList.toggle('active');
       document.getElementById('drawer-overlay').classList.toggle('active');
@@ -648,16 +720,59 @@
       if (document.getElementById('drawer-panel').classList.contains('active')) toggleDrawer();
     }
 
-    window.onload = async function() {
+    function logoutApp() {
+      localStorage.removeItem(STORAGE_KEY_PIN);
+      USER_PIN = '';
+      location.reload();
+    }
+
+    // Saat halaman dibuka: cek apakah perangkat sudah pernah login
+    window.onload = function() {
+      if (USER_PIN) {
+        initDatabase(USER_PIN, true);
+      }
+    };
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const pinInput = document.getElementById('login-pin-input').value.trim();
+      if (!pinInput) return;
+      await initDatabase(pinInput, false);
+    }
+
+    async function initDatabase(pinToTest, isAutoLogin) {
       const statusEl = document.getElementById('sync-status');
+      const errBox = document.getElementById('login-error-msg');
+      const btnLogin = document.getElementById('btn-login-submit');
+
+      errBox.style.display = 'none';
+      btnLogin.disabled = true;
+      btnLogin.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MEMVERIFIKASI...';
+      statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menghubungkan Google Drive...';
+
       try {
-        const res = await fetch(`${API_URL}?action=getInitialData`, {
+        const res = await fetch(`${API_URL}?action=getInitialData&pin=${encodeURIComponent(pinToTest)}`, {
           method: 'GET',
           redirect: 'follow'
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
+
+        if (data.status === 'unauthorized') {
+          localStorage.removeItem(STORAGE_KEY_PIN);
+          USER_PIN = '';
+          errBox.innerText = data.message || 'Password / PIN salah!';
+          errBox.style.display = 'block';
+          statusEl.innerHTML = '<i class="fa-solid fa-lock" style="color:#f87171;"></i> Akses terkunci';
+          return;
+        }
+
         if (data.status === 'success') {
+          // Simpan sesi PIN yang valid
+          USER_PIN = pinToTest;
+          localStorage.setItem(STORAGE_KEY_PIN, pinToTest);
+          document.getElementById('login-screen').classList.add('hidden');
+
           MASTER_DATA = data;
           statusEl.innerHTML = '<i class="fa-solid fa-cloud-check" style="color:#34d399;"></i> Terhubung ke Google Drive';
           document.getElementById('stat-kelas').innerText = data.kelas.length;
@@ -692,16 +807,14 @@
         }
       } catch (err) {
         console.error(err);
+        errBox.innerText = 'Gagal terhubung ke server Google Drive. Periksa koneksi internet Anda.';
+        errBox.style.display = 'block';
         statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color:#f87171;"></i> Gagal koneksi Google Drive';
-        document.getElementById('tbody-jadwal-hari-ini').innerHTML = `
-          <tr>
-            <td colspan="4" style="text-align:center; color:#ef4444; line-height:1.6;">
-              <strong>Gagal terhubung ke API Google Drive.</strong><br>
-              Pastikan Deploy Apps Script diatur ke <strong>Anyone (Siapa saja)</strong> pada akun Google pribadi atau domain yang mengizinkan akses publik.
-            </td>
-          </tr>`;
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> MASUK APLIKASI';
       }
-    };
+    }
 
     function renderDashboardKehadiran(perKelas) {
       const container = document.getElementById('dashboard-kehadiran-container');
@@ -814,6 +927,7 @@
     }
 
     async function postToDrive(payload) {
+      payload.pin = USER_PIN;
       await fetch(API_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -955,7 +1069,7 @@
       container.innerHTML = `<p style="text-align:center; padding:24px 0;"><i class="fa-solid fa-spinner fa-spin"></i> Menyusun matriks 16 pertemuan dari Google Drive...</p>`;
 
       try {
-        const res = await fetch(`${API_URL}?action=getLaporanPresensi&kelas=${encodeURIComponent(kelas)}&mapel=${encodeURIComponent(mapel)}&bulan=`, {
+        const res = await fetch(`${API_URL}?action=getLaporanPresensi&pin=${encodeURIComponent(USER_PIN)}&kelas=${encodeURIComponent(kelas)}&mapel=${encodeURIComponent(mapel)}&bulan=`, {
           method: 'GET',
           redirect: 'follow'
         });
@@ -1085,7 +1199,7 @@
       tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat laporan jurnal dari Google Drive...</td></tr>`;
 
       try {
-        const res = await fetch(`${API_URL}?action=getLaporanJurnal&kelas=${encodeURIComponent(kelas)}&mapel=${encodeURIComponent(mapel)}&bulan=${encodeURIComponent(bulan)}`, {
+        const res = await fetch(`${API_URL}?action=getLaporanJurnal&pin=${encodeURIComponent(USER_PIN)}&kelas=${encodeURIComponent(kelas)}&mapel=${encodeURIComponent(mapel)}&bulan=${encodeURIComponent(bulan)}`, {
           method: 'GET',
           redirect: 'follow'
         });
@@ -1134,7 +1248,7 @@
       container.innerHTML = `<p style="text-align:center; padding:24px 0;"><i class="fa-solid fa-spinner fa-spin"></i> Menyusun leger nilai dari Google Drive...</p>`;
 
       try {
-        const res = await fetch(`${API_URL}?action=getLaporanNilai&kelas=${encodeURIComponent(kelas)}&mapel=${encodeURIComponent(mapel)}`, {
+        const res = await fetch(`${API_URL}?action=getLaporanNilai&pin=${encodeURIComponent(USER_PIN)}&kelas=${encodeURIComponent(kelas)}&mapel=${encodeURIComponent(mapel)}`, {
           method: 'GET',
           redirect: 'follow'
         });
