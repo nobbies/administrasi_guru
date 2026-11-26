@@ -739,12 +739,15 @@
         <!-- TAB 3: MASTER DATA SISWA -->
         <div id="mtab-pane-siswa" class="master-subpane hidden">
           <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
-            <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+            <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
               <button type="button" id="btn-mode-satuan" class="btn" style="padding:7px 14px; font-size:12px;" onclick="toggleModeSiswa('satuan')">
                 <i class="fa-solid fa-user-plus"></i> Input Satuan
               </button>
               <button type="button" id="btn-mode-excel" class="btn" style="padding:7px 14px; font-size:12px; background:#64748b;" onclick="toggleModeSiswa('excel')">
-                <i class="fa-solid fa-file-excel"></i> Import Banyak Siswa (Export / Import Excel)
+                <i class="fa-solid fa-file-excel"></i> Import Data Excel
+              </button>
+              <button type="button" id="btn-mode-foto" class="btn" style="padding:7px 14px; font-size:12px; background:#64748b;" onclick="toggleModeSiswa('foto')">
+                <i class="fa-solid fa-images"></i> Upload Massal Foto Siswa
               </button>
             </div>
 
@@ -762,7 +765,6 @@
             <!-- Panel Export / Import Template Excel -->
             <div id="form-siswa-excel" class="hidden">
               <div class="excel-import-grid">
-                <!-- Langkah 1: Export Template -->
                 <div class="step-box">
                   <div>
                     <span class="step-badge">LANGKAH 1</span>
@@ -776,7 +778,6 @@
                   </button>
                 </div>
 
-                <!-- Langkah 2: Import File Excel -->
                 <div class="step-box">
                   <div>
                     <span class="step-badge" style="background:#dcfce7; color:#15803d;">LANGKAH 2</span>
@@ -791,6 +792,24 @@
                     <i class="fa-solid fa-file-arrow-up"></i> Import ke Database
                   </button>
                 </div>
+              </div>
+            </div>
+
+            <!-- Panel Upload Massal Foto Siswa -->
+            <div id="form-siswa-foto" class="hidden">
+              <div class="step-box">
+                <div>
+                  <span class="step-badge" style="background:#f3e8ff; color:#7e22ce;">UPLOAD & SINKRON OTOMATIS</span>
+                  <div style="font-weight:800; font-size:14px; color:var(--navy); margin-bottom:4px;">Pilih Banyak Foto Siswa Sekaligus</div>
+                  <p style="font-size:12px; color:var(--muted); line-height:1.5;">
+                    Pastikan nama setiap file foto menggunakan <strong>NIS siswa</strong> (contoh: <code>24001.jpg</code>, <code>24002.png</code>). Foto akan otomatis dikompres, diunggah ke folder Google Drive <strong>foto_siswa</strong>, dan ditautkan ke baris siswa yang cocok.
+                  </p>
+                  <input type="file" id="input-bulk-foto-siswa" class="file-drop-input" accept="image/*" multiple onchange="previewBulkFotoSiswa(event)">
+                  <div id="foto-bulk-preview" style="font-size:12px; margin-bottom:10px; display:none;"></div>
+                </div>
+                <button type="button" id="btn-upload-bulk-foto" class="btn" style="background:#7e22ce; width:100%;" onclick="uploadBulkFotoToDrive()" disabled>
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Upload & Sinkronkan Foto ke Drive
+                </button>
               </div>
             </div>
           </div>
@@ -1080,22 +1099,141 @@
       document.getElementById('mtab-btn-' + tabName).classList.add('active');
     }
 
+    let SELECTED_FOTO_FILES = [];
+
     function toggleModeSiswa(mode) {
       const form1 = document.getElementById('form-siswa-satuan');
       const formE = document.getElementById('form-siswa-excel');
+      const formF = document.getElementById('form-siswa-foto');
       const btn1 = document.getElementById('btn-mode-satuan');
       const btnE = document.getElementById('btn-mode-excel');
+      const btnF = document.getElementById('btn-mode-foto');
+
+      form1.classList.add('hidden');
+      formE.classList.add('hidden');
+      formF.classList.add('hidden');
+      btn1.style.background = '#64748b';
+      btnE.style.background = '#64748b';
+      btnF.style.background = '#64748b';
 
       if (mode === 'satuan') {
         form1.classList.remove('hidden');
-        formE.classList.add('hidden');
         btn1.style.background = 'var(--primary)';
-        btnE.style.background = '#64748b';
-      } else {
-        form1.classList.add('hidden');
+      } else if (mode === 'excel') {
         formE.classList.remove('hidden');
-        btn1.style.background = '#64748b';
         btnE.style.background = 'var(--primary)';
+      } else if (mode === 'foto') {
+        formF.classList.remove('hidden');
+        btnF.style.background = '#7e22ce';
+      }
+    }
+
+    function previewBulkFotoSiswa(event) {
+      const files = Array.from(event.target.files || []);
+      const infoEl = document.getElementById('foto-bulk-preview');
+      const btnUpload = document.getElementById('btn-upload-bulk-foto');
+
+      SELECTED_FOTO_FILES = [];
+      btnUpload.disabled = true;
+
+      if (files.length === 0) {
+        infoEl.style.display = 'none';
+        return;
+      }
+
+      const nisSet = new Set(MASTER_DATA.siswa.map(s => String(s.NIS || '').trim()));
+      let cocokCount = 0;
+
+      files.forEach(file => {
+        const dotIdx = file.name.lastIndexOf('.');
+        const nis = (dotIdx > 0 ? file.name.substring(0, dotIdx) : file.name).trim();
+        const isMatched = nisSet.has(nis);
+        if (isMatched) cocokCount++;
+        SELECTED_FOTO_FILES.push({ file, nis, isMatched });
+      });
+
+      infoEl.style.display = 'block';
+      infoEl.innerHTML = `
+        <div style="background:#f1f5f9; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1;">
+          <strong>${files.length} file foto</strong> dipilih &bull;
+          <span style="color:#15803d; font-weight:700;">${cocokCount} cocok dengan NIS di database</span>
+          ${files.length - cocokCount > 0 ? `<br><span style="color:#d97706;">(${files.length - cocokCount} file tidak cocok dengan NIS siswa manapun, tetap akan diunggah ke folder Drive)</span>` : ''}
+        </div>
+      `;
+      btnUpload.disabled = false;
+    }
+
+    function compressImageToBase64(file, maxWidth = 450, quality = 0.8) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const scale = Math.min(1, maxWidth / img.width);
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const base64 = dataUrl.split(',')[1];
+            resolve({
+              base64,
+              mimeType: 'image/jpeg',
+              fileName: file.name.replace(/\.[^.]+$/, '') + '.jpg'
+            });
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadBulkFotoToDrive() {
+      if (SELECTED_FOTO_FILES.length === 0) return;
+
+      const btn = document.getElementById('btn-upload-bulk-foto');
+      const infoEl = document.getElementById('foto-bulk-preview');
+      const total = SELECTED_FOTO_FILES.length;
+      const BATCH_SIZE = 10; // Kirim per 10 foto agar stabil dan tidak timeout
+
+      btn.disabled = true;
+
+      try {
+        for (let i = 0; i < total; i += BATCH_SIZE) {
+          const slice = SELECTED_FOTO_FILES.slice(i, i + BATCH_SIZE);
+          const endIdx = Math.min(i + BATCH_SIZE, total);
+          btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> MENGUNGGAH ${i + 1}-${endIdx} DARI ${total} FOTO...`;
+
+          const photosPayload = [];
+          for (const item of slice) {
+            const compressed = await compressImageToBase64(item.file);
+            photosPayload.push({
+              nis: item.nis,
+              fileName: compressed.fileName,
+              mimeType: compressed.mimeType,
+              base64: compressed.base64
+            });
+          }
+
+          await postToDrive({
+            action: 'uploadBulkFotoSiswa',
+            photos: photosPayload
+          });
+        }
+
+        SELECTED_FOTO_FILES = [];
+        document.getElementById('input-bulk-foto-siswa').value = '';
+        infoEl.style.display = 'none';
+        await initDatabase(USER_PIN, true);
+        alert(`Selesai! ${total} foto berhasil diunggah ke folder Google Drive dan ditautkan ke data siswa.`);
+      } catch (err) {
+        alert('Terjadi kesalahan saat mengunggah foto: ' + err.message);
+        btn.disabled = false;
+      } finally {
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload & Sinkronkan Foto ke Drive';
       }
     }
 
