@@ -163,6 +163,25 @@
     }
     .btn-del:hover { background: #dc2626; color: white; }
 
+    /* Box Export / Import Excel Siswa */
+    .excel-import-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px; margin-top: 8px;
+    }
+    .step-box {
+      background: white; border: 1.5px dashed #cbd5e1; border-radius: 12px;
+      padding: 16px; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .step-badge {
+      display: inline-block; background: #eff6ff; color: var(--primary);
+      font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 99px;
+      margin-bottom: 8px; width: fit-content;
+    }
+    .file-drop-input {
+      background: #f8fafc; border: 1px solid #cbd5e1; padding: 9px;
+      border-radius: 10px; font-size: 13px; margin: 10px 0; cursor: pointer;
+    }
+
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
     .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
     .stat-label { font-size: 12px; color: var(--muted); font-weight: 600; }
@@ -721,8 +740,12 @@
         <div id="mtab-pane-siswa" class="master-subpane hidden">
           <div style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
             <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
-              <button type="button" id="btn-mode-satuan" class="btn" style="padding:7px 14px; font-size:12px;" onclick="toggleModeSiswa('satuan')">Input Satuan</button>
-              <button type="button" id="btn-mode-massal" class="btn" style="padding:7px 14px; font-size:12px; background:#64748b;" onclick="toggleModeSiswa('massal')">Input Banyak Sekaligus (Copy-Paste)</button>
+              <button type="button" id="btn-mode-satuan" class="btn" style="padding:7px 14px; font-size:12px;" onclick="toggleModeSiswa('satuan')">
+                <i class="fa-solid fa-user-plus"></i> Input Satuan
+              </button>
+              <button type="button" id="btn-mode-excel" class="btn" style="padding:7px 14px; font-size:12px; background:#64748b;" onclick="toggleModeSiswa('excel')">
+                <i class="fa-solid fa-file-excel"></i> Import Banyak Siswa (Export / Import Excel)
+              </button>
             </div>
 
             <!-- Form Input Siswa Satuan -->
@@ -736,20 +759,40 @@
               <button type="submit" id="btn-mst-siswa-1" class="btn btn-success"><i class="fa-solid fa-user-plus"></i> Simpan Siswa</button>
             </form>
 
-            <!-- Form Input Siswa Massal -->
-            <form id="form-siswa-massal" class="hidden" onsubmit="simpanMasterSiswaMassal(event)">
-              <div class="form-grid">
-                <div>
-                  <label>Pilih Kelas Tujuan (Wajib)</label>
-                  <select id="mst-sws-massal-kelas" required><option value="" selected disabled>Pilih Kelas...</option></select>
+            <!-- Panel Export / Import Template Excel -->
+            <div id="form-siswa-excel" class="hidden">
+              <div class="excel-import-grid">
+                <!-- Langkah 1: Export Template -->
+                <div class="step-box">
+                  <div>
+                    <span class="step-badge">LANGKAH 1</span>
+                    <div style="font-weight:800; font-size:14px; color:var(--navy); margin-bottom:4px;">Download Template Excel</div>
+                    <p style="font-size:12px; color:var(--muted); line-height:1.45; margin-bottom:12px;">
+                      Unduh file template <strong>.xlsx</strong> dengan format kolom resmi (<code>NIS</code>, <code>Nama_Lengkap</code>, <code>Kelas</code>, <code>Foto_URL</code>) serta daftar referensi nama kelas Anda.
+                    </p>
+                  </div>
+                  <button type="button" class="btn" style="background:#0d9488; width:100%;" onclick="exportTemplateSiswa()">
+                    <i class="fa-solid fa-file-arrow-down"></i> Download Template (.xlsx)
+                  </button>
+                </div>
+
+                <!-- Langkah 2: Import File Excel -->
+                <div class="step-box">
+                  <div>
+                    <span class="step-badge" style="background:#dcfce7; color:#15803d;">LANGKAH 2</span>
+                    <div style="font-weight:800; font-size:14px; color:var(--navy); margin-bottom:4px;">Import Data Siswa dari Excel</div>
+                    <p style="font-size:12px; color:var(--muted); line-height:1.45;">
+                      Pilih file template Excel yang sudah Anda isi data siswa untuk diunggah sekaligus ke database.
+                    </p>
+                    <input type="file" id="input-file-siswa-excel" class="file-drop-input" accept=".xlsx, .xls, .csv" onchange="previewExcelSiswa(event)">
+                    <div id="excel-preview-info" style="font-size:12px; font-weight:700; color:var(--primary); margin-bottom:10px; display:none;"></div>
+                  </div>
+                  <button type="button" id="btn-import-excel-siswa" class="btn btn-success" style="width:100%;" onclick="importExcelSiswaToDrive()" disabled>
+                    <i class="fa-solid fa-file-arrow-up"></i> Import ke Database
+                  </button>
                 </div>
               </div>
-              <div style="margin-bottom:10px;">
-                <label>Daftar Siswa (Satu baris per siswa — Format: NIS, Nama Lengkap, Link Foto Opsional)</label>
-                <textarea id="mst-sws-massal-text" rows="5" placeholder="Contoh:&#10;24001, AHMAD FAUZI, https://drive.google.com/...&#10;24002, BUDI SANTOSO&#10;24003, CITRA LESTARI" required></textarea>
-              </div>
-              <button type="submit" id="btn-mst-siswa-massal" class="btn btn-success"><i class="fa-solid fa-users"></i> Simpan Semua Siswa ke Kelas Ini</button>
-            </form>
+            </div>
           </div>
 
           <div class="form-grid" style="margin-bottom:10px;">
@@ -994,6 +1037,8 @@
       rowIndex: null
     };
 
+    let PARSED_EXCEL_SISWA = [];
+
     const now = new Date();
     const todayISO = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][now.getDay()];
@@ -1037,20 +1082,20 @@
 
     function toggleModeSiswa(mode) {
       const form1 = document.getElementById('form-siswa-satuan');
-      const formM = document.getElementById('form-siswa-massal');
+      const formE = document.getElementById('form-siswa-excel');
       const btn1 = document.getElementById('btn-mode-satuan');
-      const btnM = document.getElementById('btn-mode-massal');
+      const btnE = document.getElementById('btn-mode-excel');
 
       if (mode === 'satuan') {
         form1.classList.remove('hidden');
-        formM.classList.add('hidden');
+        formE.classList.add('hidden');
         btn1.style.background = 'var(--primary)';
-        btnM.style.background = '#64748b';
+        btnE.style.background = '#64748b';
       } else {
         form1.classList.add('hidden');
-        formM.classList.remove('hidden');
+        formE.classList.remove('hidden');
         btn1.style.background = '#64748b';
-        btnM.style.background = 'var(--primary)';
+        btnE.style.background = 'var(--primary)';
       }
     }
 
@@ -1135,7 +1180,7 @@
     }
 
     function populateAllDropdowns() {
-      const kelasRequiredIds = ['pres-kelas', 'jrn-kelas', 'nil-kelas', 'rek-kelas', 'lapnil-kelas', 'mst-sws-kelas', 'mst-sws-massal-kelas', 'mst-jdw-kelas'];
+      const kelasRequiredIds = ['pres-kelas', 'jrn-kelas', 'nil-kelas', 'rek-kelas', 'lapnil-kelas', 'mst-sws-kelas', 'mst-jdw-kelas'];
       const kelasAllIds = ['lapjrn-kelas', 'dash-jarang-kelas', 'filter-mst-siswa-kelas'];
 
       kelasRequiredIds.forEach(id => {
@@ -1190,6 +1235,148 @@
         });
         if (prev) el.value = prev;
       });
+    }
+
+    // =========================================================================
+    // EXPORT TEMPLATE & IMPORT EXCEL DATA SISWA
+    // =========================================================================
+
+    function exportTemplateSiswa() {
+      const contohKelas = (MASTER_DATA.kelas.length > 0)
+        ? (MASTER_DATA.kelas[0].Nama_Kelas || MASTER_DATA.kelas[0].ID_Kelas)
+        : 'X TKJ 1';
+
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: Template Input Siswa
+      const templateRows = [
+        {
+          NIS: '24001',
+          Nama_Lengkap: 'CONTOH NAMA SISWA (HAPUS BARIS INI)',
+          Kelas: contohKelas,
+          Foto_URL: 'https://drive.google.com/file/d/...'
+        }
+      ];
+      const ws = XLSX.utils.json_to_sheet(templateRows);
+      ws['!cols'] = [
+        { wch: 15 }, // NIS
+        { wch: 36 }, // Nama_Lengkap
+        { wch: 18 }, // Kelas
+        { wch: 42 }  // Foto_URL
+      ];
+      XLSX.utils.book_append_sheet(wb, ws, 'Template_Siswa');
+
+      // Sheet 2: Daftar Nama Kelas Valid (Sebagai Referensi)
+      if (MASTER_DATA.kelas.length > 0) {
+        const refKelas = MASTER_DATA.kelas.map(k => ({
+          ID_Kelas: k.ID_Kelas || '',
+          Nama_Kelas_Valid: k.Nama_Kelas || k.ID_Kelas || '',
+          Wali_Kelas: k.Wali_Kelas || ''
+        }));
+        const wsRef = XLSX.utils.json_to_sheet(refKelas);
+        wsRef['!cols'] = [{ wch: 16 }, { wch: 24 }, { wch: 28 }];
+        XLSX.utils.book_append_sheet(wb, wsRef, 'Referensi_Kelas');
+      }
+
+      XLSX.writeFile(wb, 'Template_Import_Data_Siswa.xlsx');
+    }
+
+    function previewExcelSiswa(event) {
+      const file = event.target.files[0];
+      const infoEl = document.getElementById('excel-preview-info');
+      const btnImport = document.getElementById('btn-import-excel-siswa');
+
+      PARSED_EXCEL_SISWA = [];
+      btnImport.disabled = true;
+
+      if (!file) {
+        infoEl.style.display = 'none';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+          jsonRows.forEach((row, idx) => {
+            // Baca nama kolom secara fleksibel (case-insensitive)
+            const keys = Object.keys(row);
+            const getCol = (candidates) => {
+              const foundKey = keys.find(k => candidates.includes(k.trim().toLowerCase()));
+              return foundKey ? String(row[foundKey]).trim() : '';
+            };
+
+            const nis = getCol(['nis', 'nisn', 'id_siswa', 'id']);
+            const nama = getCol(['nama_lengkap', 'nama lengkap', 'nama_siswa', 'nama']);
+            const kelas = getCol(['kelas', 'rombel', 'nama_kelas']);
+            const foto = getCol(['foto_url', 'foto', 'link_foto', 'foto_siswa']);
+
+            // Abaikan baris kosong atau baris contoh bawaan
+            if (!nama || nama.includes('CONTOH NAMA SISWA')) return;
+
+            PARSED_EXCEL_SISWA.push({
+              nis: nis || `SWS-${Date.now()}-${idx + 1}`,
+              nama: nama,
+              kelas: kelas,
+              foto: foto
+            });
+          });
+
+          if (PARSED_EXCEL_SISWA.length === 0) {
+            infoEl.style.display = 'block';
+            infoEl.style.color = '#dc2626';
+            infoEl.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Tidak ditemukan baris data siswa yang valid di file ini.';
+            return;
+          }
+
+          const tanpaKelas = PARSED_EXCEL_SISWA.filter(s => !s.kelas).length;
+          infoEl.style.display = 'block';
+          if (tanpaKelas > 0) {
+            infoEl.style.color = '#dc2626';
+            infoEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Ditemukan ${PARSED_EXCEL_SISWA.length} siswa, tetapi ada ${tanpaKelas} baris yang kolom Kelas-nya kosong!`;
+          } else {
+            infoEl.style.color = '#15803d';
+            infoEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Siap diimport: <strong>${PARSED_EXCEL_SISWA.length} siswa</strong> terbaca dari file Excel.`;
+            btnImport.disabled = false;
+          }
+        } catch (err) {
+          console.error(err);
+          infoEl.style.display = 'block';
+          infoEl.style.color = '#dc2626';
+          infoEl.innerText = 'Gagal membaca file Excel. Pastikan format file benar (.xlsx / .xls / .csv).';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    async function importExcelSiswaToDrive() {
+      if (PARSED_EXCEL_SISWA.length === 0) return;
+
+      const btn = document.getElementById('btn-import-excel-siswa');
+      const infoEl = document.getElementById('excel-preview-info');
+      const total = PARSED_EXCEL_SISWA.length;
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> MENGIMPORT ${total} SISWA...`;
+
+      try {
+        await postToDrive({ action: 'tambahMasterSiswa', records: PARSED_EXCEL_SISWA });
+        PARSED_EXCEL_SISWA = [];
+        document.getElementById('input-file-siswa-excel').value = '';
+        infoEl.style.display = 'none';
+        await initDatabase(USER_PIN, true);
+        alert(`Berhasil mengimport ${total} data siswa ke Google Sheets!`);
+      } catch (err) {
+        alert('Gagal mengimport data siswa: ' + err.message);
+        btn.disabled = false;
+      } finally {
+        btn.innerHTML = '<i class="fa-solid fa-file-arrow-up"></i> Import ke Database';
+      }
     }
 
     // =========================================================================
@@ -1511,44 +1698,6 @@
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Simpan Siswa';
-      }
-    }
-
-    async function simpanMasterSiswaMassal(e) {
-      e.preventDefault();
-      const kelas = document.getElementById('mst-sws-massal-kelas').value;
-      const rawText = document.getElementById('mst-sws-massal-text').value.trim();
-      if (!kelas || !rawText) return alert('Pilih kelas dan isi daftar siswa!');
-
-      const lines = rawText.split('\n').map(l => l.trim()).filter(l => l !== '');
-      const records = [];
-
-      lines.forEach((line, i) => {
-        const parts = line.includes('\t') ? line.split('\t') : line.split(',');
-        const nis = (parts[0] || '').trim() || `SWS-${Date.now()}-${i + 1}`;
-        const nama = (parts[1] || '').trim();
-        const foto = (parts[2] || '').trim();
-        if (nama) {
-          records.push({ nis, nama, kelas, foto });
-        }
-      });
-
-      if (records.length === 0) return alert('Format baris tidak terbaca. Gunakan format: NIS, Nama Lengkap');
-
-      const btn = document.getElementById('btn-mst-siswa-massal');
-      btn.disabled = true;
-      btn.innerText = `MENYIMPAN ${records.length} SISWA...`;
-
-      try {
-        await postToDrive({ action: 'tambahMasterSiswa', records });
-        document.getElementById('mst-sws-massal-text').value = '';
-        await initDatabase(USER_PIN, true);
-        alert(`Berhasil menambahkan ${records.length} siswa ke kelas ${kelas}!`);
-      } catch (err) {
-        alert('Gagal menyimpan data massal: ' + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-users"></i> Simpan Semua Siswa ke Kelas Ini';
       }
     }
 
