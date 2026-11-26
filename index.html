@@ -112,14 +112,14 @@
       background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
       padding: 20px; margin-bottom: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);
     }
-    .section-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .section-title { font-size: 17px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
     .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
     .stat-label { font-size: 12px; color: var(--muted); font-weight: 600; }
     .stat-val { font-size: 24px; font-weight: 800; color: var(--navy); margin-top: 4px; }
 
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 12px; }
     label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; }
     select, input, textarea {
       width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
@@ -127,6 +127,21 @@
     }
     select:focus, input:focus, textarea:focus { border-color: var(--primary); background: white; }
     input[disabled] { background: #e2e8f0; color: #475569; cursor: not-allowed; font-weight: 600; }
+
+    /* Pengaturan Bobot Nilai */
+    .bobot-box {
+      background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 14px;
+    }
+    .bobot-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
+    }
+    .bobot-badge {
+      font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 99px;
+    }
+    .bobot-ok { background: #dcfce7; color: #15803d; }
+    .bobot-warn { background: #fee2e2; color: #dc2626; }
 
     /* Tabel Matriks Rekap Presensi Semester & Jurnal */
     .matrix-table {
@@ -425,6 +440,7 @@
         </div>
       </div>
 
+      <!-- Persentase Kehadiran per Kelas -->
       <div class="card">
         <div class="section-title"><i class="fa-solid fa-chart-pie" style="color:var(--hadir);"></i> Persentase Kehadiran per Kelas</div>
         <div id="dashboard-kehadiran-container" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px;">
@@ -432,6 +448,44 @@
         </div>
       </div>
 
+      <!-- Daftar Siswa Jarang Masuk -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+          <div class="section-title" style="margin-bottom:0;">
+            <i class="fa-solid fa-user-clock" style="color:var(--alpa);"></i> Daftar Siswa Jarang Masuk
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <select id="dash-jarang-kelas" onchange="renderSiswaJarangMasuk()" style="width:auto; padding:6px 10px; font-size:12px;">
+              <option value="">Semua Kelas</option>
+            </select>
+            <select id="dash-jarang-batas" onchange="renderSiswaJarangMasuk()" style="width:auto; padding:6px 10px; font-size:12px;">
+              <option value="85" selected>Kehadiran &lt; 85%</option>
+              <option value="80">Kehadiran &lt; 80%</option>
+              <option value="75">Kehadiran &lt; 75%</option>
+              <option value="60">Kehadiran &lt; 60%</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:42px;">No</th>
+                <th>Nama Siswa</th>
+                <th>Kelas</th>
+                <th style="text-align:center;">Hadir</th>
+                <th style="text-align:center;">S / I / A</th>
+                <th style="min-width:150px;">Persentase Hadir</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-siswa-jarang-masuk">
+              <tr><td colspan="6" style="text-align:center; color:var(--muted);">Memuat data presensi siswa...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Jadwal Mengajar Hari Ini -->
       <div class="card">
         <div class="section-title"><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> Jadwal Mengajar Hari Ini (<span id="hari-ini-label"></span>)</div>
         <div class="table-wrap">
@@ -652,6 +706,31 @@
             <input type="number" id="lapnil-kkm" value="75" min="0" max="100">
           </div>
         </div>
+
+        <!-- Pengaturan Bobot Nilai NR -->
+        <div class="bobot-box">
+          <div class="bobot-header">
+            <span style="font-size:12px; font-weight:700; color:var(--navy);">
+              <i class="fa-solid fa-sliders" style="color:#7e22ce;"></i> Pengaturan Bobot Nilai Rapor (NR)
+            </span>
+            <span id="badge-total-bobot" class="bobot-badge bobot-ok">Total Bobot: 100%</span>
+          </div>
+          <div class="form-grid" style="margin-bottom:0;">
+            <div>
+              <label>Bobot RPH (%)</label>
+              <input type="number" id="bobot-rph" value="50" min="0" max="100" oninput="updateBobotBadge()">
+            </div>
+            <div>
+              <label>Bobot UTS (%)</label>
+              <input type="number" id="bobot-uts" value="25" min="0" max="100" oninput="updateBobotBadge()">
+            </div>
+            <div>
+              <label>Bobot UAS (%)</label>
+              <input type="number" id="bobot-uas" value="25" min="0" max="100" oninput="updateBobotBadge()">
+            </div>
+          </div>
+        </div>
+
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button class="btn" style="background:#7e22ce;" onclick="loadLaporanNilai()"><i class="fa-solid fa-magnifying-glass"></i> Tampilkan Leger Nilai</button>
           <button class="btn btn-success" onclick="exportLegerExcel()"><i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)</button>
@@ -662,7 +741,12 @@
       <div class="card" style="padding:14px;">
         <div id="lapnil-header-info" style="margin-bottom:12px; display:none;">
           <h3 style="font-size:15px; color:#0f172a; margin-bottom:2px;">DAFTAR NILAI PESERTA DIDIK</h3>
-          <p style="font-size:12px; color:#475569;">Kelas: <strong id="lbl-lapnil-kls"></strong> | Mata Pelajaran: <strong id="lbl-lapnil-mpl"></strong> | KKTP: <strong id="lbl-lapnil-kkm"></strong></p>
+          <p style="font-size:12px; color:#475569;">
+            Kelas: <strong id="lbl-lapnil-kls"></strong> |
+            Mata Pelajaran: <strong id="lbl-lapnil-mpl"></strong> |
+            KKTP: <strong id="lbl-lapnil-kkm"></strong> |
+            Bobot NR: <strong id="lbl-lapnil-bobot"></strong>
+          </p>
         </div>
 
         <div class="table-wrap" id="leger-nilai-container">
@@ -683,7 +767,7 @@
       siswa: [],
       presensiHariIni: {},
       totalJurnal: 0,
-      presensiStats: { persenGlobal: 0, perKelas: {} }
+      presensiStats: { persenGlobal: 0, perKelas: {}, siswaStats: [] }
     };
 
     const now = new Date();
@@ -726,7 +810,6 @@
       location.reload();
     }
 
-    // Saat halaman dibuka: cek apakah perangkat sudah pernah login
     window.onload = function() {
       if (USER_PIN) {
         initDatabase(USER_PIN, true);
@@ -768,7 +851,6 @@
         }
 
         if (data.status === 'success') {
-          // Simpan sesi PIN yang valid
           USER_PIN = pinToTest;
           localStorage.setItem(STORAGE_KEY_PIN, pinToTest);
           document.getElementById('login-screen').classList.add('hidden');
@@ -780,11 +862,12 @@
           document.getElementById('stat-mapel').innerText = data.mapel.length;
           document.getElementById('stat-jurnal').innerText = data.totalJurnal;
 
-          const statsHadir = data.presensiStats || { persenGlobal: 0, perKelas: {} };
+          const statsHadir = data.presensiStats || { persenGlobal: 0, perKelas: {}, siswaStats: [] };
           document.getElementById('stat-kehadiran').innerText = statsHadir.persenGlobal + '%';
           renderDashboardKehadiran(statsHadir.perKelas);
+          renderSiswaJarangMasuk();
 
-          ['pres-kelas', 'jrn-kelas', 'nil-kelas', 'rek-kelas', 'lapjrn-kelas', 'lapnil-kelas'].forEach(id => {
+          ['pres-kelas', 'jrn-kelas', 'nil-kelas', 'rek-kelas', 'lapjrn-kelas', 'lapnil-kelas', 'dash-jarang-kelas'].forEach(id => {
             const el = document.getElementById(id);
             data.kelas.forEach(k => {
               const nama = k.Nama_Kelas || k.ID_Kelas;
@@ -852,6 +935,51 @@
               <span>A: <strong>${info.alpa}</strong></span>
             </div>
           </div>`;
+      });
+    }
+
+    function renderSiswaJarangMasuk() {
+      const tbody = document.getElementById('tbody-siswa-jarang-masuk');
+      const filterKelas = document.getElementById('dash-jarang-kelas').value;
+      const batasPct = Number(document.getElementById('dash-jarang-batas').value) || 85;
+      const allSiswaStats = (MASTER_DATA.presensiStats && MASTER_DATA.presensiStats.siswaStats) ? MASTER_DATA.presensiStats.siswaStats : [];
+
+      const filtered = allSiswaStats.filter(s => {
+        const matchKelas = filterKelas ? s.kelas === filterKelas : true;
+        return matchKelas && s.total > 0 && s.persen < batasPct;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#15803d; font-weight:600; padding:16px;">Tidak ada siswa dengan kehadiran di bawah ${batasPct}%.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      filtered.forEach((s, idx) => {
+        const badgeColor = s.persen < 75 ? '#dc2626' : '#d97706';
+        tbody.innerHTML += `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>
+              <strong style="color:var(--navy);">${s.nama}</strong>
+              <div style="font-size:11px; color:var(--muted);">NIS: ${s.nis}</div>
+            </td>
+            <td><strong>${s.kelas}</strong></td>
+            <td style="text-align:center; font-weight:700; color:#15803d;">${s.hadir} / ${s.total}</td>
+            <td style="text-align:center; font-size:12px;">
+              <span style="color:#ea580c; font-weight:700;">S:${s.sakit}</span> |
+              <span style="color:#2563eb; font-weight:700;">I:${s.izin}</span> |
+              <span style="color:#dc2626; font-weight:800;">A:${s.alpa}</span>
+            </td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="flex:1; height:7px; background:#e2e8f0; border-radius:99px; overflow:hidden; min-width:70px;">
+                  <div style="width:${s.persen}%; height:100%; background:${badgeColor}; border-radius:99px;"></div>
+                </div>
+                <strong style="font-size:12px; color:${badgeColor}; min-width:36px; text-align:right;">${s.persen}%</strong>
+              </div>
+            </td>
+          </tr>`;
       });
     }
 
@@ -1234,14 +1362,37 @@
       }
     }
 
-    // LAPORAN 3: LEGER NILAI PESERTA DIDIK & EXPORT EXCEL
+    // PENGATURAN BOBOT & LAPORAN 3: LEGER NILAI PESERTA DIDIK
+    function updateBobotBadge() {
+      const bRph = Number(document.getElementById('bobot-rph').value) || 0;
+      const bUts = Number(document.getElementById('bobot-uts').value) || 0;
+      const bUas = Number(document.getElementById('bobot-uas').value) || 0;
+      const total = bRph + bUts + bUas;
+
+      const badge = document.getElementById('badge-total-bobot');
+      badge.innerText = `Total Bobot: ${total}%`;
+      if (total === 100) {
+        badge.className = 'bobot-badge bobot-ok';
+      } else {
+        badge.className = 'bobot-badge bobot-warn';
+      }
+    }
+
     async function loadLaporanNilai() {
       const kelas = document.getElementById('lapnil-kelas').value;
       const mapel = document.getElementById('lapnil-mapel').value;
       const kkm = Number(document.getElementById('lapnil-kkm').value) || 75;
 
+      const bRph = Number(document.getElementById('bobot-rph').value) || 0;
+      const bUts = Number(document.getElementById('bobot-uts').value) || 0;
+      const bUas = Number(document.getElementById('bobot-uas').value) || 0;
+      const totalBobot = bRph + bUts + bUas;
+
       if (!kelas || !mapel) {
         return alert('Silakan pilih Kelas dan Mata Pelajaran terlebih dahulu!');
+      }
+      if (totalBobot !== 100) {
+        return alert(`Total bobot RPH + UTS + UAS saat ini ${totalBobot}%. Pastikan jumlah bobot tepat 100%!`);
       }
 
       const container = document.getElementById('leger-nilai-container');
@@ -1276,6 +1427,7 @@
         document.getElementById('lbl-lapnil-kls').innerText = kelas;
         document.getElementById('lbl-lapnil-mpl').innerText = mapel;
         document.getElementById('lbl-lapnil-kkm').innerText = kkm;
+        document.getElementById('lbl-lapnil-bobot').innerText = `RPH ${bRph}% | UTS ${bUts}% | UAS ${bUas}%`;
 
         let html = `<table id="tabel-leger-nilai" class="leger-table">
           <thead>
@@ -1284,9 +1436,9 @@
               <th rowspan="4" style="width:65px;">NIS.</th>
               <th rowspan="4" style="min-width:200px;">Nama Peserta Didik</th>
               <th colspan="14">NILAI</th>
-              <th rowspan="4" class="vertical-th"><span>RPH</span></th>
-              <th rowspan="4" class="vertical-th"><span>UTS</span></th>
-              <th rowspan="4" class="vertical-th"><span>UAS</span></th>
+              <th rowspan="4" class="vertical-th"><span>RPH (${bRph}%)</span></th>
+              <th rowspan="4" class="vertical-th"><span>UTS (${bUts}%)</span></th>
+              <th rowspan="4" class="vertical-th"><span>UAS (${bUas}%)</span></th>
               <th rowspan="4" style="min-width:42px;">NR</th>
               <th rowspan="4" style="min-width:42px;">Pred</th>
             </tr>
@@ -1345,8 +1497,24 @@
           const uts = (sc['UTS'] !== undefined && !isNaN(sc['UTS'])) ? sc['UTS'] : '';
           const uas = (sc['UAS'] !== undefined && !isNaN(sc['UAS'])) ? sc['UAS'] : '';
 
-          const kompNR = [rph, uts, uas].filter(v => v !== '');
-          const nr = kompNR.length > 0 ? Math.round(kompNR.reduce((a, b) => a + b, 0) / kompNR.length) : '';
+          // Kalkulasi NR berdasarkan bobot RPH%, UTS%, dan UAS%
+          let totalSkorTerbobot = 0;
+          let totalBobotTerisi = 0;
+
+          if (rph !== '' && bRph > 0) {
+            totalSkorTerbobot += (rph * bRph);
+            totalBobotTerisi += bRph;
+          }
+          if (uts !== '' && bUts > 0) {
+            totalSkorTerbobot += (uts * bUts);
+            totalBobotTerisi += bUts;
+          }
+          if (uas !== '' && bUas > 0) {
+            totalSkorTerbobot += (uas * bUas);
+            totalBobotTerisi += bUas;
+          }
+
+          const nr = totalBobotTerisi > 0 ? Math.round(totalSkorTerbobot / totalBobotTerisi) : '';
 
           let pred = '';
           if (nr !== '') {
@@ -1360,7 +1528,7 @@
             <td><strong>${rph}</strong></td>
             <td class="${uts !== '' && uts < kkm ? 'nilai-kurang' : ''}">${uts}</td>
             <td class="${uas !== '' && uas < kkm ? 'nilai-kurang' : ''}">${uas}</td>
-            <td style="background:#f1f5f9;"><strong>${nr}</strong></td>
+            <td style="background:#f1f5f9;" class="${nr !== '' && nr < kkm ? 'nilai-kurang' : ''}"><strong>${nr}</strong></td>
             <td><strong>${pred}</strong></td>
           </tr>`;
         });
@@ -1396,9 +1564,9 @@
         { wch: 5 }, { wch: 5 },
         { wch: 5 }, { wch: 5 },
         { wch: 5 }, { wch: 5 },
-        { wch: 6 },
-        { wch: 6 },
-        { wch: 6 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 10 },
         { wch: 6 },
         { wch: 6 }
       ];
