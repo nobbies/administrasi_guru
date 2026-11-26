@@ -58,6 +58,28 @@
       padding: 10px; border-radius: 10px; margin-bottom: 14px; display: none;
     }
 
+    /* Modal Edit Data Master */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(3px); z-index: 9000; display: flex;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-card {
+      background: white; width: 100%; max-width: 460px; border-radius: 16px;
+      padding: 22px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      animation: popIn 0.2s ease-out;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-head {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;
+    }
+    .modal-title { font-size: 16px; font-weight: 800; color: var(--navy); }
+    .modal-close { background: none; border: none; font-size: 22px; color: var(--muted); cursor: pointer; }
+
     header {
       background: var(--navy); color: white; position: sticky; top: 0; z-index: 50;
       padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
@@ -127,6 +149,13 @@
     .master-tab-btn:hover { background: #e2e8f0; }
     .master-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
+    .action-btns { display: flex; justify-content: center; gap: 6px; }
+    .btn-edit {
+      background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe;
+      padding: 5px 9px; border-radius: 7px; font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: 0.2s;
+    }
+    .btn-edit:hover { background: #2563eb; color: white; }
     .btn-del {
       background: #fee2e2; color: #dc2626; border: 1px solid #fecaca;
       padding: 5px 9px; border-radius: 7px; font-size: 11px; font-weight: 700;
@@ -269,7 +298,7 @@
     .nilai-kurang { color: #dc2626; font-weight: 700; background: #fee2e2; }
 
     @media print {
-      header, .floating-footer, .no-print, .login-overlay { display: none !important; }
+      header, .floating-footer, .no-print, .login-overlay, .modal-backdrop { display: none !important; }
       main { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
       .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
       body { background: white !important; padding-bottom: 0 !important; }
@@ -384,6 +413,25 @@
         <button type="submit" id="btn-login-submit" class="btn" style="width:100%; padding:13px;">
           <i class="fa-solid fa-right-to-bracket"></i> MASUK APLIKASI
         </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL EDIT DATA MASTER -->
+  <div id="modal-edit-master" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title" id="modal-edit-title">Edit Data Master</div>
+        <button type="button" class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <form id="form-edit-master" onsubmit="submitEditMaster(event)">
+        <div id="modal-edit-fields" style="display:flex; flex-direction:column; gap:12px; margin-bottom:18px;"></div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn" style="background:#64748b; padding:10px 16px;" onclick="closeEditModal()">Batal</button>
+          <button type="submit" id="btn-save-edit" class="btn btn-success" style="padding:10px 18px;">
+            <i class="fa-solid fa-check"></i> Simpan Perubahan
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -645,7 +693,7 @@
 
           <div class="table-wrap">
             <table>
-              <thead><tr><th style="width:45px;">No</th><th>ID Kelas</th><th>Nama Kelas</th><th>Wali Kelas</th><th style="width:80px; text-align:center;">Aksi</th></tr></thead>
+              <thead><tr><th style="width:45px;">No</th><th>ID Kelas</th><th>Nama Kelas</th><th>Wali Kelas</th><th style="width:105px; text-align:center;">Aksi</th></tr></thead>
               <tbody id="tbody-mst-kelas"></tbody>
             </table>
           </div>
@@ -663,7 +711,7 @@
 
           <div class="table-wrap">
             <table>
-              <thead><tr><th style="width:45px;">No</th><th>Kode / ID Mapel</th><th>Nama Mata Pelajaran</th><th style="width:80px; text-align:center;">Aksi</th></tr></thead>
+              <thead><tr><th style="width:45px;">No</th><th>Kode / ID Mapel</th><th>Nama Mata Pelajaran</th><th style="width:105px; text-align:center;">Aksi</th></tr></thead>
               <tbody id="tbody-mst-mapel"></tbody>
             </table>
           </div>
@@ -717,7 +765,7 @@
 
           <div class="table-wrap">
             <table>
-              <thead><tr><th style="width:45px;">No</th><th>NIS</th><th>Nama Lengkap</th><th>Kelas</th><th>Foto</th><th style="width:80px; text-align:center;">Aksi</th></tr></thead>
+              <thead><tr><th style="width:45px;">No</th><th>NIS</th><th>Nama Lengkap</th><th>Kelas</th><th>Foto</th><th style="width:105px; text-align:center;">Aksi</th></tr></thead>
               <tbody id="tbody-mst-siswa"></tbody>
             </table>
           </div>
@@ -748,7 +796,7 @@
 
           <div class="table-wrap">
             <table>
-              <thead><tr><th style="width:45px;">No</th><th>Hari</th><th>Jam Ke</th><th>Kelas</th><th>Mata Pelajaran</th><th style="width:80px; text-align:center;">Aksi</th></tr></thead>
+              <thead><tr><th style="width:45px;">No</th><th>Hari</th><th>Jam Ke</th><th>Kelas</th><th>Mata Pelajaran</th><th style="width:105px; text-align:center;">Aksi</th></tr></thead>
               <tbody id="tbody-mst-jadwal"></tbody>
             </table>
           </div>
@@ -941,6 +989,11 @@
       presensiStats: { persenGlobal: 0, perKelas: {}, siswaStats: [] }
     };
 
+    let CURRENT_EDIT_STATE = {
+      sheetName: '',
+      rowIndex: null
+    };
+
     const now = new Date();
     const todayISO = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][now.getDay()];
@@ -1081,7 +1134,6 @@
       }
     }
 
-    // Isi ulang semua pilihan dropdown Kelas & Mapel di seluruh modul
     function populateAllDropdowns() {
       const kelasRequiredIds = ['pres-kelas', 'jrn-kelas', 'nil-kelas', 'rek-kelas', 'lapnil-kelas', 'mst-sws-kelas', 'mst-sws-massal-kelas', 'mst-jdw-kelas'];
       const kelasAllIds = ['lapjrn-kelas', 'dash-jarang-kelas', 'filter-mst-siswa-kelas'];
@@ -1141,7 +1193,7 @@
     }
 
     // =========================================================================
-    // FUNGSI KELOLA DATA MASTER (KELAS, MAPEL, SISWA, JADWAL)
+    // FUNGSI KELOLA DATA MASTER (TAMBAH, EDIT & HAPUS)
     // =========================================================================
 
     function renderMasterTables() {
@@ -1158,8 +1210,11 @@
               <td><strong>${k.ID_Kelas || '-'}</strong></td>
               <td>${k.Nama_Kelas || '-'}</td>
               <td>${k.Wali_Kelas || '-'}</td>
-              <td style="text-align:center;">
-                <button class="btn-del" onclick="hapusMasterItem('Master_Kelas', ${k._rowIndex}, '${k.Nama_Kelas || k.ID_Kelas}')"><i class="fa-solid fa-trash"></i></button>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-edit" title="Edit Kelas" onclick="openEditModal('Master_Kelas', ${k._rowIndex})"><i class="fa-solid fa-pen"></i></button>
+                  <button class="btn-del" title="Hapus Kelas" onclick="hapusMasterItem('Master_Kelas', ${k._rowIndex}, '${k.Nama_Kelas || k.ID_Kelas}')"><i class="fa-solid fa-trash"></i></button>
+                </div>
               </td>
             </tr>`;
         });
@@ -1177,8 +1232,11 @@
               <td>${idx + 1}</td>
               <td><strong>${m.ID_Mapel || '-'}</strong></td>
               <td>${m.Nama_Mapel || '-'}</td>
-              <td style="text-align:center;">
-                <button class="btn-del" onclick="hapusMasterItem('Master_Mapel', ${m._rowIndex}, '${m.ID_Mapel}')"><i class="fa-solid fa-trash"></i></button>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-edit" title="Edit Mapel" onclick="openEditModal('Master_Mapel', ${m._rowIndex})"><i class="fa-solid fa-pen"></i></button>
+                  <button class="btn-del" title="Hapus Mapel" onclick="hapusMasterItem('Master_Mapel', ${m._rowIndex}, '${m.ID_Mapel}')"><i class="fa-solid fa-trash"></i></button>
+                </div>
               </td>
             </tr>`;
         });
@@ -1208,8 +1266,11 @@
               <td><strong>${s.Nama_Lengkap || '-'}</strong></td>
               <td>${s.Kelas || '-'}</td>
               <td>${hasFoto}</td>
-              <td style="text-align:center;">
-                <button class="btn-del" onclick="hapusMasterItem('Master_Siswa', ${s._rowIndex}, '${s.Nama_Lengkap}')"><i class="fa-solid fa-trash"></i></button>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-edit" title="Edit Siswa" onclick="openEditModal('Master_Siswa', ${s._rowIndex})"><i class="fa-solid fa-pen"></i></button>
+                  <button class="btn-del" title="Hapus Siswa" onclick="hapusMasterItem('Master_Siswa', ${s._rowIndex}, '${s.Nama_Lengkap}')"><i class="fa-solid fa-trash"></i></button>
+                </div>
               </td>
             </tr>`;
         });
@@ -1229,11 +1290,147 @@
               <td>Jam ke-${j.Jam_Ke || '-'}</td>
               <td>${j.Kelas || '-'}</td>
               <td>${j.ID_Mapel || '-'}</td>
-              <td style="text-align:center;">
-                <button class="btn-del" onclick="hapusMasterItem('Master_Jadwal', ${j._rowIndex}, '${j.Hari} ${j.Kelas}')"><i class="fa-solid fa-trash"></i></button>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-edit" title="Edit Jadwal" onclick="openEditModal('Master_Jadwal', ${j._rowIndex})"><i class="fa-solid fa-pen"></i></button>
+                  <button class="btn-del" title="Hapus Jadwal" onclick="hapusMasterItem('Master_Jadwal', ${j._rowIndex}, '${j.Hari} ${j.Kelas}')"><i class="fa-solid fa-trash"></i></button>
+                </div>
               </td>
             </tr>`;
         });
+      }
+    }
+
+    function openEditModal(sheetName, rowIndex) {
+      CURRENT_EDIT_STATE = { sheetName, rowIndex };
+      const titleEl = document.getElementById('modal-edit-title');
+      const fieldsEl = document.getElementById('modal-edit-fields');
+      fieldsEl.innerHTML = '';
+
+      if (sheetName === 'Master_Kelas') {
+        const item = MASTER_DATA.kelas.find(x => x._rowIndex === rowIndex);
+        if (!item) return;
+        titleEl.innerText = 'Edit Data Kelas';
+        fieldsEl.innerHTML = `
+          <div><label>ID Kelas</label><input type="text" id="edit-kls-id" value="${escapeAttr(item.ID_Kelas)}" required></div>
+          <div><label>Nama Kelas</label><input type="text" id="edit-kls-nama" value="${escapeAttr(item.Nama_Kelas)}" required></div>
+          <div><label>Wali Kelas</label><input type="text" id="edit-kls-wali" value="${escapeAttr(item.Wali_Kelas)}"></div>
+        `;
+      } else if (sheetName === 'Master_Mapel') {
+        const item = MASTER_DATA.mapel.find(x => x._rowIndex === rowIndex);
+        if (!item) return;
+        titleEl.innerText = 'Edit Mata Pelajaran';
+        fieldsEl.innerHTML = `
+          <div><label>Kode / ID Mapel</label><input type="text" id="edit-mpl-id" value="${escapeAttr(item.ID_Mapel)}" required></div>
+          <div><label>Nama Mata Pelajaran</label><input type="text" id="edit-mpl-nama" value="${escapeAttr(item.Nama_Mapel)}" required></div>
+        `;
+      } else if (sheetName === 'Master_Siswa') {
+        const item = MASTER_DATA.siswa.find(x => x._rowIndex === rowIndex);
+        if (!item) return;
+        titleEl.innerText = 'Edit Data Siswa';
+        let kelasOpts = '';
+        MASTER_DATA.kelas.forEach(k => {
+          const namaKls = k.Nama_Kelas || k.ID_Kelas;
+          const sel = (String(item.Kelas).trim() === String(namaKls).trim()) ? 'selected' : '';
+          kelasOpts += `<option value="${escapeAttr(namaKls)}" ${sel}>${namaKls}</option>`;
+        });
+        const fotoVal = item.Foto_URL || item.Foto_Siswa || '';
+        fieldsEl.innerHTML = `
+          <div><label>NIS / ID Siswa</label><input type="text" id="edit-sws-nis" value="${escapeAttr(item.NIS)}" required></div>
+          <div><label>Nama Lengkap Siswa</label><input type="text" id="edit-sws-nama" value="${escapeAttr(item.Nama_Lengkap)}" required></div>
+          <div><label>Kelas</label><select id="edit-sws-kelas" required>${kelasOpts}</select></div>
+          <div><label>Link Foto Google Drive (Opsional)</label><input type="text" id="edit-sws-foto" value="${escapeAttr(fotoVal)}"></div>
+        `;
+      } else if (sheetName === 'Master_Jadwal') {
+        const item = MASTER_DATA.jadwal.find(x => x._rowIndex === rowIndex);
+        if (!item) return;
+        titleEl.innerText = 'Edit Jadwal Mengajar';
+        const hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const hariOpts = hariList.map(h => `<option value="${h}" ${String(item.Hari).trim() === h ? 'selected' : ''}>${h}</option>`).join('');
+
+        let kelasOpts = '';
+        MASTER_DATA.kelas.forEach(k => {
+          const namaKls = k.Nama_Kelas || k.ID_Kelas;
+          const sel = (String(item.Kelas).trim() === String(namaKls).trim()) ? 'selected' : '';
+          kelasOpts += `<option value="${escapeAttr(namaKls)}" ${sel}>${namaKls}</option>`;
+        });
+
+        let mapelOpts = '';
+        MASTER_DATA.mapel.forEach(m => {
+          const idM = m.ID_Mapel;
+          const nmM = m.Nama_Mapel ? `${m.ID_Mapel} - ${m.Nama_Mapel}` : idM;
+          const sel = (String(item.ID_Mapel).trim() === String(idM).trim()) ? 'selected' : '';
+          mapelOpts += `<option value="${escapeAttr(idM)}" ${sel}>${nmM}</option>`;
+        });
+
+        fieldsEl.innerHTML = `
+          <div><label>Hari</label><select id="edit-jdw-hari" required>${hariOpts}</select></div>
+          <div><label>Jam Pelajaran Ke-</label><input type="text" id="edit-jdw-jam" value="${escapeAttr(item.Jam_Ke)}" required></div>
+          <div><label>Kelas</label><select id="edit-jdw-kelas" required>${kelasOpts}</select></div>
+          <div><label>Mata Pelajaran</label><select id="edit-jdw-mapel" required>${mapelOpts}</select></div>
+        `;
+      }
+
+      document.getElementById('modal-edit-master').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('modal-edit-master').classList.add('hidden');
+      CURRENT_EDIT_STATE = { sheetName: '', rowIndex: null };
+    }
+
+    function escapeAttr(val) {
+      if (val === undefined || val === null) return '';
+      return String(val).replace(/"/g, '&quot;');
+    }
+
+    async function submitEditMaster(e) {
+      e.preventDefault();
+      const { sheetName, rowIndex } = CURRENT_EDIT_STATE;
+      if (!sheetName || !rowIndex) return;
+
+      let record = {};
+      if (sheetName === 'Master_Kelas') {
+        record = {
+          idKelas: document.getElementById('edit-kls-id').value.trim(),
+          namaKelas: document.getElementById('edit-kls-nama').value.trim(),
+          waliKelas: document.getElementById('edit-kls-wali').value.trim()
+        };
+      } else if (sheetName === 'Master_Mapel') {
+        record = {
+          idMapel: document.getElementById('edit-mpl-id').value.trim(),
+          namaMapel: document.getElementById('edit-mpl-nama').value.trim()
+        };
+      } else if (sheetName === 'Master_Siswa') {
+        record = {
+          nis: document.getElementById('edit-sws-nis').value.trim(),
+          nama: document.getElementById('edit-sws-nama').value.trim(),
+          kelas: document.getElementById('edit-sws-kelas').value.trim(),
+          foto: document.getElementById('edit-sws-foto').value.trim()
+        };
+      } else if (sheetName === 'Master_Jadwal') {
+        record = {
+          hari: document.getElementById('edit-jdw-hari').value,
+          jamKe: document.getElementById('edit-jdw-jam').value.trim(),
+          kelas: document.getElementById('edit-jdw-kelas').value,
+          idMapel: document.getElementById('edit-jdw-mapel').value
+        };
+      }
+
+      const btn = document.getElementById('btn-save-edit');
+      btn.disabled = true;
+      btn.innerText = 'MENYIMPAN...';
+
+      try {
+        await postToDrive({ action: 'editMasterRow', sheetName, rowIndex, record });
+        closeEditModal();
+        await initDatabase(USER_PIN, true);
+        alert('Perubahan data berhasil disimpan!');
+      } catch (err) {
+        alert('Gagal memperbarui data: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Simpan Perubahan';
       }
     }
 
@@ -1327,7 +1524,6 @@
       const records = [];
 
       lines.forEach((line, i) => {
-        // Mendukung pemisah koma (,) atau tab (copy-paste langsung dari kolom Excel)
         const parts = line.includes('\t') ? line.split('\t') : line.split(',');
         const nis = (parts[0] || '').trim() || `SWS-${Date.now()}-${i + 1}`;
         const nama = (parts[1] || '').trim();
