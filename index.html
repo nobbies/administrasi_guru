@@ -513,6 +513,13 @@
       </button>
     </nav>
 
+    <div class="drawer-label" style="margin-top: 8px; border-top: 1px solid var(--navy-light); padding-top: 14px;">SISTEM</div>
+    <nav class="drawer-nav">
+      <button class="nav-btn" id="nav-pengaturan" onclick="switchModule('pengaturan')">
+        <i class="fa-solid fa-gear" style="width:18px; color:#f43f5e;"></i> Pengaturan & Reset Data
+      </button>
+    </nav>
+    
     <div style="margin-top: auto; padding: 16px 12px 24px; border-top: 1px solid var(--navy-light);">
       <button class="nav-btn" style="color:#f87171; width:100%;" onclick="logoutApp()">
         <i class="fa-solid fa-right-from-bracket" style="width:18px;"></i> Keluar / Kunci Aplikasi
@@ -1035,6 +1042,97 @@
         </div>
       </div>
     </section>
+
+    <!-- MODUL 8: PENGATURAN & WIPE DATA TAHUN AJARAN BARU -->
+    <section id="mod-pengaturan" class="module-pane hidden">
+      <div class="card">
+        <div class="section-title">
+          <i class="fa-solid fa-gear" style="color:#e11d48;"></i> Pengaturan & Reset Data Tahun Ajaran Baru
+        </div>
+        <p style="font-size:13px; color:var(--muted); line-height:1.55; margin-bottom:16px;">
+          Gunakan fitur ini saat pergantian semester atau tahun ajaran baru agar riwayat lama tidak menumpuk dan aplikasi tetap ringan. <strong>Header kolom tidak akan terhapus.</strong>
+        </p>
+
+        <!-- Pilihan Kategori Data yang Akan Dihapus -->
+        <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:800; color:var(--navy); text-transform:uppercase; margin-bottom:10px;">
+            1. Pilih Data yang Ingin Dikosongkan:
+          </div>
+
+          <label style="display:flex; align-items:flex-start; gap:10px; text-transform:none; font-weight:600; color:var(--text); margin-bottom:10px; cursor:pointer;">
+            <input type="checkbox" class="wipe-chk" value="Log_Presensi" checked style="width:18px; height:18px; margin-top:2px;">
+            <div>
+              <strong>Log Presensi Siswa (<code>Log_Presensi</code>)</strong>
+              <div style="font-size:11px; color:var(--muted);">Menghapus seluruh riwayat kehadiran harian siswa.</div>
+            </div>
+          </label>
+
+          <label style="display:flex; align-items:flex-start; gap:10px; text-transform:none; font-weight:600; color:var(--text); margin-bottom:10px; cursor:pointer;">
+            <input type="checkbox" class="wipe-chk" value="Log_Jurnal" checked style="width:18px; height:18px; margin-top:2px;">
+            <div>
+              <strong>Log Jurnal Mengajar (<code>Log_Jurnal</code>)</strong>
+              <div style="font-size:11px; color:var(--muted);">Menghapus seluruh catatan KBM dan materi pokok tahun sebelumnya.</div>
+            </div>
+          </label>
+
+          <label style="display:flex; align-items:flex-start; gap:10px; text-transform:none; font-weight:600; color:var(--text); margin-bottom:10px; cursor:pointer;">
+            <input type="checkbox" class="wipe-chk" value="Log_Nilai" checked style="width:18px; height:18px; margin-top:2px;">
+            <div>
+              <strong>Log Nilai Asesmen (<code>Log_Nilai</code>)</strong>
+              <div style="font-size:11px; color:var(--muted);">Menghapus seluruh skor tugas, PH, UTS, dan UAS lama.</div>
+            </div>
+          </label>
+
+          <hr style="border:none; border-top:1px dashed #cbd5e1; margin:12px 0;">
+
+          <label style="display:flex; align-items:flex-start; gap:10px; text-transform:none; font-weight:600; color:var(--text); margin-bottom:10px; cursor:pointer;">
+            <input type="checkbox" class="wipe-chk" value="Master_Jadwal" style="width:18px; height:18px; margin-top:2px;">
+            <div>
+              <strong>Master Jadwal Mengajar (<code>Master_Jadwal</code>)</strong>
+              <div style="font-size:11px; color:var(--muted);">Centang jika jadwal mengajar Anda berubah total di tahun ajaran baru.</div>
+            </div>
+          </label>
+
+          <label style="display:flex; align-items:flex-start; gap:10px; text-transform:none; font-weight:600; color:#dc2626; cursor:pointer;">
+            <input type="checkbox" class="wipe-chk" value="Master_Siswa" style="width:18px; height:18px; margin-top:2px;">
+            <div>
+              <strong>Master Data Siswa (<code>Master_Siswa</code>)</strong>
+              <div style="font-size:11px; color:var(--muted);">Hati-hati: Menghapus seluruh daftar siswa (gunakan hanya jika ingin import ulang daftar siswa baru).</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Opsi Backup Otomatis -->
+        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:14px; margin-bottom:16px;">
+          <label style="display:flex; align-items:center; gap:10px; text-transform:none; font-weight:700; color:#1d4ed8; margin-bottom:0; cursor:pointer;">
+            <input type="checkbox" id="wipe-auto-backup" checked style="width:18px; height:18px;">
+            <span>Buat Salinan Backup Otomatis di Google Drive sebelum data dihapus (Sangat Disarankan)</span>
+          </label>
+        </div>
+
+        <!-- Verifikasi Keamanan -->
+        <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:12px; padding:16px;">
+          <div style="font-size:12px; font-weight:800; color:#be123c; text-transform:uppercase; margin-bottom:10px;">
+            2. Konfirmasi Keamanan:
+          </div>
+          <div class="form-grid">
+            <div>
+              <label>Masukkan PIN Guru Anda</label>
+              <input type="password" id="wipe-confirm-pin" placeholder="Masukkan PIN...">
+            </div>
+            <div>
+              <label>Ketik kata HAPUS (Huruf Kapital)</label>
+              <input type="text" id="wipe-confirm-text" placeholder="Ketik HAPUS" oninput="validateWipeButton()">
+            </div>
+          </div>
+          <button type="button" id="btn-execute-wipe" class="btn" style="background:#e11d48; width:100%; margin-top:6px;" onclick="executeWipeData()" disabled>
+            <i class="fa-solid fa-triangle-exclamation"></i> BERSIHKAN DATA SEKARANG
+          </button>
+          <div id="wipe-result-box" style="margin-top:12px; font-size:13px; display:none;"></div>
+        </div>
+      </div>
+    </section>
+    
   </main>
 
   <script>
@@ -2567,6 +2665,80 @@
       const fileName = `Leger_Nilai_${kelas.replace(/\s+/g, '_')}_${mapel.replace(/\s+/g, '_')}.xlsx`;
       XLSX.writeFile(wb, fileName);
     }
+
+    // =========================================================================
+    // PENGATURAN & WIPE DATA TAHUN AJARAN BARU
+    // =========================================================================
+
+    function validateWipeButton() {
+      const txt = document.getElementById('wipe-confirm-text').value.trim();
+      const btn = document.getElementById('btn-execute-wipe');
+      btn.disabled = (txt !== 'HAPUS');
+    }
+
+    async function executeWipeData() {
+      const targets = Array.from(document.querySelectorAll('.wipe-chk:checked')).map(el => el.value);
+      if (targets.length === 0) {
+        return alert('Pilih minimal satu kategori data yang ingin dibersihkan!');
+      }
+
+      const pinInput = document.getElementById('wipe-confirm-pin').value.trim();
+      if (!pinInput) {
+        return alert('Masukkan PIN Guru Anda untuk mengonfirmasi penghapusan data.');
+      }
+      if (pinInput !== USER_PIN) {
+        return alert('PIN Guru tidak sesuai!');
+      }
+
+      const buatBackup = document.getElementById('wipe-auto-backup').checked;
+      const konfirmasiAkhir = confirm(
+        `PERINGATAN AKHIR:\n\nAnda akan mengosongkan ${targets.length} tabel (${targets.join(', ')}).\n` +
+        (buatBackup ? 'File backup otomatis akan dibuat di Google Drive terlebih dahulu.\n\n' : 'TANPA BACKUP!\n\n') +
+        'Lanjutkan proses reset data?'
+      );
+      if (!konfirmasiAkhir) return;
+
+      const btn = document.getElementById('btn-execute-wipe');
+      const resBox = document.getElementById('wipe-result-box');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MEMPROSES BACKUP & RESET DATA...';
+      resBox.style.display = 'none';
+
+      try {
+        const result = await postToDrive({
+          action: 'wipeDataTahunAjaran',
+          targets: targets,
+          backup: buatBackup
+        });
+
+        document.getElementById('wipe-confirm-pin').value = '';
+        document.getElementById('wipe-confirm-text').value = '';
+
+        let backupHtml = '';
+        if (result.backupUrl) {
+          backupHtml = `<br><i class="fa-solid fa-box-archive"></i> File Backup tersimpan: <a href="${result.backupUrl}" target="_blank" style="color:#1d4ed8; font-weight:700; text-decoration:underline;">${result.backupName}</a>`;
+        }
+
+        resBox.style.display = 'block';
+        resBox.innerHTML = `
+          <div style="background:#dcfce7; color:#15803d; border:1px solid #86efac; padding:12px; border-radius:10px;">
+            <strong><i class="fa-solid fa-circle-check"></i> Data berhasil dibersihkan!</strong><br>
+            Tabel yang di-reset: <code>${(result.wiped || targets).join(', ')}</code>
+            ${backupHtml}
+          </div>
+        `;
+
+        // Muat ulang statistik & data aplikasi dari Google Sheets
+        await initDatabase(USER_PIN, true);
+      } catch (err) {
+        const msg = (err && err.message) ? err.message : String(err);
+        alert('Gagal melakukan reset data: ' + msg);
+      } finally {
+        btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> BERSIHKAN DATA SEKARANG';
+        validateWipeButton();
+      }
+    }
+    
   </script>
 </body>
 </html>
