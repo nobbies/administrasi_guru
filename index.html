@@ -710,8 +710,17 @@
         <div id="mtab-pane-kelas" class="master-subpane">
           <form onsubmit="simpanMasterKelas(event)" style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
             <div class="form-grid">
-              <div><label>ID Kelas</label><input type="text" id="mst-kls-id" placeholder="Contoh: X-TKJ-1" required></div>
-              <div><label>Nama Kelas</label><input type="text" id="mst-kls-nama" placeholder="Contoh: X TKJ 1" required></div>
+              <div><label>ID Kelas</label><input type="text" id="mst-kls-id" placeholder="Contoh: 10 TKJ 1" required></div>
+              <div><label>Nama Kelas</label><input type="text" id="mst-kls-nama" placeholder="Contoh: 10 TKJ 1" required></div>
+              <div>
+                <label>Tingkat</label>
+                <select id="mst-kls-tingkat" required>
+                  <option value="" selected disabled>Pilih Tingkat...</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                </select>
+              </div>
               <div><label>Wali Kelas (Opsional)</label><input type="text" id="mst-kls-wali" placeholder="Nama Wali Kelas"></div>
             </div>
             <button type="submit" id="btn-mst-kelas" class="btn btn-success"><i class="fa-solid fa-plus"></i> Tambah Kelas</button>
@@ -719,7 +728,16 @@
 
           <div class="table-wrap">
             <table>
-              <thead><tr><th style="width:45px;">No</th><th>ID Kelas</th><th>Nama Kelas</th><th>Wali Kelas</th><th style="width:105px; text-align:center;">Aksi</th></tr></thead>
+              <thead>
+                <tr>
+                  <th style="width:45px;">No</th>
+                  <th>ID Kelas</th>
+                  <th>Nama Kelas</th>
+                  <th style="width:85px;">Tingkat</th>
+                  <th>Wali Kelas</th>
+                  <th style="width:105px; text-align:center;">Aksi</th>
+                </tr>
+              </thead>
               <tbody id="tbody-mst-kelas"></tbody>
             </table>
           </div>
@@ -729,15 +747,33 @@
         <div id="mtab-pane-mapel" class="master-subpane hidden">
           <form onsubmit="simpanMasterMapel(event)" style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
             <div class="form-grid">
-              <div><label>Kode / ID Mapel</label><input type="text" id="mst-mpl-id" placeholder="Contoh: MP-01 atau KKA" required></div>
-              <div><label>Nama Mata Pelajaran</label><input type="text" id="mst-mpl-nama" placeholder="Contoh: Administrasi Infrastruktur Jaringan" required></div>
+              <div><label>Kode / ID Mapel</label><input type="text" id="mst-mpl-id" placeholder="Contoh: INF atau KKA_XI" required></div>
+              <div><label>Nama Mata Pelajaran</label><input type="text" id="mst-mpl-nama" placeholder="Contoh: Informatika" required></div>
+              <div>
+                <label>Tingkat</label>
+                <select id="mst-mpl-tingkat" required>
+                  <option value="" selected disabled>Pilih Tingkat...</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                  <option value="Semua">Semua Tingkat</option>
+                </select>
+              </div>
             </div>
             <button type="submit" id="btn-mst-mapel" class="btn btn-success"><i class="fa-solid fa-plus"></i> Tambah Mata Pelajaran</button>
           </form>
 
           <div class="table-wrap">
             <table>
-              <thead><tr><th style="width:45px;">No</th><th>Kode / ID Mapel</th><th>Nama Mata Pelajaran</th><th style="width:105px; text-align:center;">Aksi</th></tr></thead>
+              <thead>
+                <tr>
+                  <th style="width:45px;">No</th>
+                  <th>Kode / ID Mapel</th>
+                  <th>Nama Mata Pelajaran</th>
+                  <th style="width:85px;">Tingkat</th>
+                  <th style="width:105px; text-align:center;">Aksi</th>
+                </tr>
+              </thead>
               <tbody id="tbody-mst-mapel"></tbody>
             </table>
           </div>
@@ -1620,10 +1656,10 @@
     // =========================================================================
 
     function renderMasterTables() {
-      // 1. Tabel Kelas
+      // 1. Tabel Kelas (di dalam renderMasterTables)
       const tbKelas = document.getElementById('tbody-mst-kelas');
       if (MASTER_DATA.kelas.length === 0) {
-        tbKelas.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Belum ada data kelas.</td></tr>`;
+        tbKelas.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted);">Belum ada data kelas.</td></tr>`;
       } else {
         tbKelas.innerHTML = '';
         MASTER_DATA.kelas.forEach((k, idx) => {
@@ -1632,6 +1668,7 @@
               <td>${idx + 1}</td>
               <td><strong>${k.ID_Kelas || '-'}</strong></td>
               <td>${k.Nama_Kelas || '-'}</td>
+              <td><span style="background:#eff6ff; color:#1d4ed8; font-weight:700; padding:3px 9px; border-radius:6px; font-size:12px;">${k.Tingkat || '-'}</span></td>
               <td>${k.Wali_Kelas || '-'}</td>
               <td>
                 <div class="action-btns">
@@ -1643,10 +1680,10 @@
         });
       }
 
-      // 2. Tabel Mapel
+      // 2. Tabel Mapel (di dalam renderMasterTables)
       const tbMapel = document.getElementById('tbody-mst-mapel');
       if (MASTER_DATA.mapel.length === 0) {
-        tbMapel.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--muted);">Belum ada data mata pelajaran.</td></tr>`;
+        tbMapel.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Belum ada data mata pelajaran.</td></tr>`;
       } else {
         tbMapel.innerHTML = '';
         MASTER_DATA.mapel.forEach((m, idx) => {
@@ -1655,6 +1692,7 @@
               <td>${idx + 1}</td>
               <td><strong>${m.ID_Mapel || '-'}</strong></td>
               <td>${m.Nama_Mapel || '-'}</td>
+              <td><span style="background:#f0fdf4; color:#15803d; font-weight:700; padding:3px 9px; border-radius:6px; font-size:12px;">${m.Tingkat || '-'}</span></td>
               <td>
                 <div class="action-btns">
                   <button class="btn-edit" title="Edit Mapel" onclick="openEditModal('Master_Mapel', ${m._rowIndex})"><i class="fa-solid fa-pen"></i></button>
@@ -1734,18 +1772,37 @@
         const item = MASTER_DATA.kelas.find(x => x._rowIndex === rowIndex);
         if (!item) return;
         titleEl.innerText = 'Edit Data Kelas';
+        const tgk = String(item.Tingkat || '').trim();
         fieldsEl.innerHTML = `
           <div><label>ID Kelas</label><input type="text" id="edit-kls-id" value="${escapeAttr(item.ID_Kelas)}" required></div>
           <div><label>Nama Kelas</label><input type="text" id="edit-kls-nama" value="${escapeAttr(item.Nama_Kelas)}" required></div>
+          <div>
+            <label>Tingkat</label>
+            <select id="edit-kls-tingkat" required>
+              <option value="10" ${tgk === '10' ? 'selected' : ''}>10</option>
+              <option value="11" ${tgk === '11' ? 'selected' : ''}>11</option>
+              <option value="12" ${tgk === '12' ? 'selected' : ''}>12</option>
+            </select>
+          </div>
           <div><label>Wali Kelas</label><input type="text" id="edit-kls-wali" value="${escapeAttr(item.Wali_Kelas)}"></div>
         `;
       } else if (sheetName === 'Master_Mapel') {
         const item = MASTER_DATA.mapel.find(x => x._rowIndex === rowIndex);
         if (!item) return;
         titleEl.innerText = 'Edit Mata Pelajaran';
+        const tgk = String(item.Tingkat || '').trim();
         fieldsEl.innerHTML = `
           <div><label>Kode / ID Mapel</label><input type="text" id="edit-mpl-id" value="${escapeAttr(item.ID_Mapel)}" required></div>
           <div><label>Nama Mata Pelajaran</label><input type="text" id="edit-mpl-nama" value="${escapeAttr(item.Nama_Mapel)}" required></div>
+          <div>
+            <label>Tingkat</label>
+            <select id="edit-mpl-tingkat" required>
+              <option value="10" ${tgk === '10' ? 'selected' : ''}>10</option>
+              <option value="11" ${tgk === '11' ? 'selected' : ''}>11</option>
+              <option value="12" ${tgk === '12' ? 'selected' : ''}>12</option>
+              <option value="Semua" ${tgk === 'Semua' ? 'selected' : ''}>Semua Tingkat</option>
+            </select>
+          </div>
         `;
       } else if (sheetName === 'Master_Siswa') {
         const item = MASTER_DATA.siswa.find(x => x._rowIndex === rowIndex);
@@ -1817,12 +1874,14 @@
         record = {
           idKelas: document.getElementById('edit-kls-id').value.trim(),
           namaKelas: document.getElementById('edit-kls-nama').value.trim(),
+          tingkat: document.getElementById('edit-kls-tingkat').value,
           waliKelas: document.getElementById('edit-kls-wali').value.trim()
         };
       } else if (sheetName === 'Master_Mapel') {
         record = {
           idMapel: document.getElementById('edit-mpl-id').value.trim(),
-          namaMapel: document.getElementById('edit-mpl-nama').value.trim()
+          namaMapel: document.getElementById('edit-mpl-nama').value.trim(),
+          tingkat: document.getElementById('edit-mpl-tingkat').value
         };
       } else if (sheetName === 'Master_Siswa') {
         record = {
@@ -1866,6 +1925,7 @@
       const record = {
         idKelas: document.getElementById('mst-kls-id').value.trim(),
         namaKelas: document.getElementById('mst-kls-nama').value.trim(),
+        tingkat: document.getElementById('mst-kls-tingkat').value,
         waliKelas: document.getElementById('mst-kls-wali').value.trim()
       };
 
@@ -1873,6 +1933,7 @@
         await postToDrive({ action: 'tambahMasterKelas', record });
         document.getElementById('mst-kls-id').value = '';
         document.getElementById('mst-kls-nama').value = '';
+        document.getElementById('mst-kls-tingkat').value = '';
         document.getElementById('mst-kls-wali').value = '';
         await initDatabase(USER_PIN, true);
         alert('Data Kelas berhasil ditambahkan!');
@@ -1892,13 +1953,15 @@
 
       const record = {
         idMapel: document.getElementById('mst-mpl-id').value.trim(),
-        namaMapel: document.getElementById('mst-mpl-nama').value.trim()
+        namaMapel: document.getElementById('mst-mpl-nama').value.trim(),
+        tingkat: document.getElementById('mst-mpl-tingkat').value
       };
 
       try {
         await postToDrive({ action: 'tambahMasterMapel', record });
         document.getElementById('mst-mpl-id').value = '';
         document.getElementById('mst-mpl-nama').value = '';
+        document.getElementById('mst-mpl-tingkat').value = '';
         await initDatabase(USER_PIN, true);
         alert('Mata Pelajaran berhasil ditambahkan!');
       } catch (err) {
