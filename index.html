@@ -2045,9 +2045,15 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
-      const result = await res.json();
+      const rawText = await res.text();
+      let result;
+      try {
+        result = JSON.parse(rawText);
+      } catch (e) {
+        throw new Error('Respons server bukan JSON: ' + rawText.substring(0, 150));
+      }
       if (result.status !== 'success') {
-        throw new Error(result.message || 'Gagal memproses permintaan di server.');
+        throw new Error(result.message || JSON.stringify(result));
       }
       return result;
     }
