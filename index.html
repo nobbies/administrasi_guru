@@ -1251,6 +1251,43 @@
         </button>
         <div id="restore-result-box" style="margin-top:12px; font-size:13px; display:none;"></div>
       </div>
+
+      <!-- PANEL KENAIKAN KELAS & KELULUSAN MASSAL -->
+      <div class="card" style="border-left: 4px solid #10b981;">
+        <div class="section-title">
+          <i class="fa-solid fa-graduation-cap" style="color:#10b981;"></i> Kenaikan Kelas & Kelulusan Massal
+        </div>
+        <p style="font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:14px;">
+          Pindahkan seluruh siswa dalam satu rombel ke kelas baru atau luluskan kelas 12 sekaligus tanpa mengubah <strong>NIS</strong> dan <strong>Foto Siswa</strong>. <em>Saran: Proses mulai dari kelas tertinggi (12 → Lulus, lalu 11 → 12, lalu 10 → 11) agar tidak tercampur.</em>
+        </p>
+
+        <div class="form-grid">
+          <div>
+            <label>Aksi Kenaikan Kelas</label>
+            <select id="promo-mode" onchange="togglePromoMode()">
+              <option value="perKelas">Naik Kelas (Pindahkan 1 Rombel Penuh)</option>
+              <option value="luluskanKelas">Luluskan Siswa (Hapus 1 Rombel Kelas 12)</option>
+            </select>
+          </div>
+          <div>
+            <label>Dari Kelas Asal</label>
+            <select id="promo-kelas-asal"></select>
+          </div>
+          <div id="wrap-promo-tujuan">
+            <label>Ke Kelas Tujuan</label>
+            <select id="promo-kelas-tujuan"></select>
+          </div>
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-weight:700; color:#047857; margin-bottom:14px; cursor:pointer;">
+          <input type="checkbox" id="promo-auto-backup" checked style="width:17px; height:17px;">
+          <span>Buat backup otomatis di Google Drive sebelum memproses kenaikan kelas</span>
+        </label>
+
+        <button type="button" id="btn-execute-promo" class="btn btn-success" style="width:100%;" onclick="executeNaikKelasMassal()">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> PROSES KENAIKAN KELAS MASSAL
+        </button>
+      </div>
     </section>
     
   </main>
@@ -1536,7 +1573,7 @@
     }
 
     function populateAllDropdowns() {
-      const kelasRequiredIds = ['pres-kelas', 'jrn-kelas', 'nil-kelas', 'rek-kelas', 'lapnil-kelas', 'mst-sws-kelas', 'mst-jdw-kelas'];
+      const kelasRequiredIds = ['pres-kelas', 'jrn-kelas', 'nil-kelas', 'rek-kelas', 'lapnil-kelas', 'mst-sws-kelas', 'mst-jdw-kelas', 'promo-kelas-asal', 'promo-kelas-tujuan'];
       const kelasAllIds = ['lapjrn-kelas', 'dash-jarang-kelas', 'filter-mst-siswa-kelas'];
 
       kelasRequiredIds.forEach(id => {
@@ -3001,6 +3038,54 @@
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> PULIHKAN DATA DARI BACKUP TERPILIH';
+      }
+    }
+
+    function togglePromoMode() {
+      const mode = document.getElementById('promo-mode').value;
+      document.getElementById('wrap-promo-tujuan').style.display = (mode === 'luluskanKelas') ? 'none' : 'block';
+    }
+
+    async function executeNaikKelasMassal() {
+      const mode = document.getElementById('promo-mode').value;
+      const kelasAsal = document.getElementById('promo-kelas-asal').value;
+      const kelasTujuan = document.getElementById('promo-kelas-tujuan').value;
+      const backup = document.getElementById('promo-auto-backup').checked;
+
+      if (!kelasAsal) return alert('Pilih Kelas Asal terlebih dahulu!');
+      if (mode === 'perKelas') {
+        if (!kelasTujuan) return alert('Pilih Kelas Tujuan terlebih dahulu!');
+        if (kelasAsal === kelasTujuan) return alert('Kelas Asal dan Kelas Tujuan tidak boleh sama!');
+      }
+
+      const jumlahSiswa = MASTER_DATA.siswa.filter(s => String(s.Kelas).trim() === kelasAsal).length;
+      if (jumlahSiswa === 0) return alert(`Tidak ada siswa di kelas ${kelasAsal}.`);
+
+      const pesanKonfirmasi = (mode === 'luluskanKelas')
+      ? `Luluskan dan hapus ${jumlahSiswa} siswa dari kelas "${kelasAsal}"?`
+      : `Pindahkan ${jumlahSiswa} siswa dari kelas "${kelasAsal}" ke "${kelasTujuan}"?`;
+
+      if (!confirm(pesanKonfirmasi)) return;
+
+      const btn = document.getElementById('btn-execute-promo');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MEMPROSES KENAIKAN KELAS...';
+
+      try {
+        const res = await postToDrive({
+          action: 'naikKelasMassal',
+          mode: mode,
+          kelasAsal: kelasAsal,
+          kelasTujuan: kelasTujuan,
+          backup: backup
+        });
+      await initDatabase(USER_PIN, true);
+      alert(`Berhasil! ${res.affected} siswa telah diperbarui.`);
+      } catch (err) {
+      alert('Gagal memproses kenaikan kelas: ' + (err.message || err));
+      } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i> PROSES KENAIKAN KELAS MASSAL';
       }
     }
   </script>
