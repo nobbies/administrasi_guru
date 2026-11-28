@@ -701,6 +701,9 @@
           <button class="master-tab-btn" id="mtab-btn-siswa" onclick="switchMasterTab('siswa')">
             <i class="fa-solid fa-users"></i> Data Siswa
           </button>
+          <button class="master-tab-btn" id="mtab-btn-alumni" onclick="switchMasterTab('alumni')">
+            <i class="fa-solid fa-user-graduate"></i> Data Alumni
+          </button>
           <button class="master-tab-btn" id="mtab-btn-jadwal" onclick="switchMasterTab('jadwal')">
             <i class="fa-solid fa-calendar-week"></i> Jadwal Mengajar
           </button>
@@ -903,6 +906,37 @@
             <table>
               <thead><tr><th style="width:45px;">No</th><th>Hari</th><th>Jam Ke</th><th>Kelas</th><th>Mata Pelajaran</th><th style="width:105px; text-align:center;">Aksi</th></tr></thead>
               <tbody id="tbody-mst-jadwal"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- TAB 5: DATA ALUMNI -->
+        <div id="mtab-pane-alumni" class="master-subpane hidden">
+          <div class="form-grid" style="margin-bottom:12px;">
+            <div>
+              <select id="filter-alumni-tahun" onchange="renderAlumniTable()">
+                <option value="">Semua Tahun Lulus</option>
+              </select>
+            </div>
+            <div>
+              <input type="text" id="cari-alumni" onkeyup="renderAlumniTable()" placeholder="Cari nama, NIS, atau kelas terakhir alumni...">
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:45px;">No</th>
+                  <th style="width:65px;">Foto</th>
+                  <th>Tahun Lulus</th>
+                  <th>NIS</th>
+                  <th>Nama Lengkap</th>
+                  <th>Kelas Terakhir</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-mst-alumni">
+                <tr><td colspan="6" style="text-align:center; color:var(--muted);">Belum ada data alumni.</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
@@ -1266,7 +1300,7 @@
             <label>Aksi Kenaikan Kelas</label>
             <select id="promo-mode" onchange="togglePromoMode()">
               <option value="perKelas">Naik Kelas (Pindahkan 1 Rombel Penuh)</option>
-              <option value="luluskanKelas">Luluskan Siswa (Hapus 1 Rombel Kelas 12)</option>
+              <option value="luluskanKelas">Luluskan Siswa (Pindahkan ke Data Alumni)</option>
             </select>
           </div>
           <div>
@@ -1276,6 +1310,10 @@
           <div id="wrap-promo-tujuan">
             <label>Ke Kelas Tujuan</label>
             <select id="promo-kelas-tujuan"></select>
+          </div>
+          <div id="wrap-promo-tahun" class="hidden">
+            <label>Tahun Kelulusan</label>
+            <input type="number" id="promo-tahun-lulus" value="2026" min="2020" max="2099">
           </div>
         </div>
 
@@ -3043,13 +3081,16 @@
 
     function togglePromoMode() {
       const mode = document.getElementById('promo-mode').value;
-      document.getElementById('wrap-promo-tujuan').style.display = (mode === 'luluskanKelas') ? 'none' : 'block';
+      const isLulus = (mode === 'luluskanKelas');
+      document.getElementById('wrap-promo-tujuan').classList.toggle('hidden', isLulus);
+      document.getElementById('wrap-promo-tahun').classList.toggle('hidden', !isLulus);
     }
 
     async function executeNaikKelasMassal() {
       const mode = document.getElementById('promo-mode').value;
       const kelasAsal = document.getElementById('promo-kelas-asal').value;
       const kelasTujuan = document.getElementById('promo-kelas-tujuan').value;
+      const tahunLulus = document.getElementById('promo-tahun-lulus').value.trim() || new Date().getFullYear();
       const backup = document.getElementById('promo-auto-backup').checked;
 
       if (!kelasAsal) return alert('Pilih Kelas Asal terlebih dahulu!');
@@ -3062,14 +3103,14 @@
       if (jumlahSiswa === 0) return alert(`Tidak ada siswa di kelas ${kelasAsal}.`);
 
       const pesanKonfirmasi = (mode === 'luluskanKelas')
-      ? `Luluskan dan hapus ${jumlahSiswa} siswa dari kelas "${kelasAsal}"?`
-      : `Pindahkan ${jumlahSiswa} siswa dari kelas "${kelasAsal}" ke "${kelasTujuan}"?`;
+        ? `Luluskan ${jumlahSiswa} siswa dari kelas "${kelasAsal}" ke arsip Data Alumni (Tahun Lulus ${tahunLulus})?`
+        : `Pindahkan ${jumlahSiswa} siswa dari kelas "${kelasAsal}" ke "${kelasTujuan}"?`;
 
       if (!confirm(pesanKonfirmasi)) return;
 
       const btn = document.getElementById('btn-execute-promo');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MEMPROSES KENAIKAN KELAS...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MEMPROSES DATA...';
 
       try {
         const res = await postToDrive({
@@ -3077,16 +3118,71 @@
           mode: mode,
           kelasAsal: kelasAsal,
           kelasTujuan: kelasTujuan,
+          tahunLulus: tahunLulus,
           backup: backup
         });
-      await initDatabase(USER_PIN, true);
-      alert(`Berhasil! ${res.affected} siswa telah diperbarui.`);
+        await initDatabase(USER_PIN, true);
+        if (mode === 'luluskanKelas') {
+          alert(`Berhasil! ${res.affected} siswa kelas ${kelasAsal} telah dipindahkan ke Data Alumni (${tahunLulus}).`);
+        } else {
+          alert(`Berhasil! ${res.affected} siswa telah dipindahkan ke kelas ${kelasTujuan}.`);
+        }
       } catch (err) {
-      alert('Gagal memproses kenaikan kelas: ' + (err.message || err));
+        alert('Gagal memproses kenaikan kelas: ' + (err.message || err));
       } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i> PROSES KENAIKAN KELAS MASSAL';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i> PROSES KENAIKAN KELAS MASSAL';
       }
+    }
+
+    function renderAlumniTable() {
+      const list = MASTER_DATA.alumni || [];
+      const selTahun = document.getElementById('filter-alumni-tahun');
+      const tbody = document.getElementById('tbody-mst-alumni');
+      if (!selTahun || !tbody) return;
+
+      // Isi opsi filter tahun lulus secara dinamis
+      const prevTahun = selTahun.value;
+      const uniqueTahun = [...new Set(list.map(a => String(a.Tahun_Lulus || '').trim()).filter(Boolean))].sort().reverse();
+      selTahun.innerHTML = `<option value="">Semua Tahun Lulus (${list.length} Alumni)</option>`;
+      uniqueTahun.forEach(th => {
+        selTahun.innerHTML += `<option value="${th}">Lulusan Tahun ${th}</option>`;
+      });
+      if (prevTahun && uniqueTahun.includes(prevTahun)) selTahun.value = prevTahun;
+
+      const filterTh = selTahun.value;
+      const q = (document.getElementById('cari-alumni').value || '').toLowerCase();
+
+      const filtered = list.filter(a => {
+        const matchTh = filterTh ? String(a.Tahun_Lulus).trim() === filterTh : true;
+        const matchQ = q ? (
+          String(a.Nama_Lengkap).toLowerCase().includes(q) ||
+          String(a.NIS).toLowerCase().includes(q) ||
+          String(a.Kelas_Terakhir).toLowerCase().includes(q)
+        ) : true;
+        return matchTh && matchQ;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:18px;">Belum ada data alumni yang cocok.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      filtered.forEach((a, idx) => {
+        const fotoUrl = fixDrivePhoto(a.Foto_URL);
+        tbody.innerHTML += `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>
+              <img src="${fotoUrl}" loading="lazy" referrerpolicy="no-referrer" style="width:42px; height:54px; object-fit:cover; border-radius:6px; border:1px solid var(--border);">
+            </td>
+            <td><span style="background:#dcfce7; color:#15803d; font-weight:800; padding:3px 9px; border-radius:6px; font-size:12px;">${a.Tahun_Lulus || '-'}</span></td>
+            <td>${a.NIS || '-'}</td>
+            <td><strong>${a.Nama_Lengkap || '-'}</strong></td>
+            <td>${a.Kelas_Terakhir || '-'}</td>
+          </tr>`;
+      });
     }
   </script>
 </body>
