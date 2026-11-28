@@ -1184,6 +1184,73 @@
           <div id="wipe-result-box" style="margin-top:12px; font-size:13px; display:none;"></div>
         </div>
       </div>
+
+      <!-- PANEL PULIHKAN (RESTORE) BACKUP -->
+      <div class="card" style="border-left: 4px solid #0284c7;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div class="section-title" style="margin-bottom:0;">
+            <i class="fa-solid fa-clock-rotate-left" style="color:#0284c7;"></i> Pulihkan Data dari Backup (Restore)
+          </div>
+          <button type="button" class="btn" style="background:#0284c7; padding:8px 14px; font-size:12px;" onclick="loadBackupList()">
+            <i class="fa-solid fa-rotate"></i> Muat Daftar Backup
+          </button>
+        </div>
+
+        <p style="font-size:13px; color:var(--muted); line-height:1.55; margin-bottom:14px;">
+          Pilih arsip backup Spreadsheet dari Google Drive untuk mengembalikan data tabel yang dipilih ke database aktif.
+        </p>
+
+        <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:14px;">
+          <div style="margin-bottom:14px;">
+            <label>1. Pilih File Backup dari Google Drive</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <select id="restore-file-select" style="flex:1; min-width:240px;" onchange="toggleOpenBackupLink()">
+                <option value="" selected disabled>Klik "Muat Daftar Backup" terlebih dahulu...</option>
+              </select>
+              <a id="link-preview-backup" href="#" target="_blank" class="btn hidden" style="background:#475569; padding:10px 14px; font-size:12px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                <i class="fa-solid fa-up-right-from-square"></i> Buka Sheet
+              </a>
+            </div>
+          </div>
+
+          <div style="font-size:12px; font-weight:800; color:var(--navy); text-transform:uppercase; margin-bottom:8px;">
+            2. Pilih Tabel yang Akan Dipulihkan:
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:8px; margin-bottom:12px;">
+            <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-weight:600; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="restore-chk" value="Log_Presensi" checked style="width:17px; height:17px;"> Log Presensi
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-weight:600; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="restore-chk" value="Log_Jurnal" checked style="width:17px; height:17px;"> Log Jurnal KBM
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-weight:600; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="restore-chk" value="Log_Nilai" checked style="width:17px; height:17px;"> Log Nilai Siswa
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-weight:600; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="restore-chk" value="Master_Jadwal" checked style="width:17px; height:17px;"> Master Jadwal
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-weight:600; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="restore-chk" value="Master_Siswa" checked style="width:17px; height:17px;"> Master Siswa
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-weight:600; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="restore-chk" value="Master_Kelas" checked style="width:17px; height:17px;"> Master Kelas
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-weight:600; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="restore-chk" value="Master_Mapel" checked style="width:17px; height:17px;"> Master Mapel
+            </label>
+          </div>
+
+          <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-weight:700; color:#0369a1; margin-bottom:0; cursor:pointer;">
+            <input type="checkbox" id="restore-safety-backup" checked style="width:17px; height:17px;">
+            <span>Buat backup pengaman kondisi saat ini sebelum ditimpa file backup</span>
+          </label>
+        </div>
+
+        <button type="button" id="btn-execute-restore" class="btn" style="background:#0284c7; width:100%;" onclick="executeRestoreBackup()">
+          <i class="fa-solid fa-cloud-arrow-down"></i> PULIHKAN DATA DARI BACKUP TERPILIH
+        </button>
+        <div id="restore-result-box" style="margin-top:12px; font-size:13px; display:none;"></div>
+      </div>
     </section>
     
   </main>
@@ -2818,7 +2885,124 @@
         validateWipeButton();
       }
     }
-    
+
+    // =========================================================================
+    // PULIHKAN (RESTORE) DATA DARI BACKUP GOOGLE DRIVE
+    // =========================================================================
+
+    let BACKUP_FILES_CACHE = [];
+
+    async function loadBackupList() {
+      const sel = document.getElementById('restore-file-select');
+      const linkPreview = document.getElementById('link-preview-backup');
+      sel.innerHTML = `<option value="" selected disabled>Memuat daftar backup dari Drive...</option>`;
+      linkPreview.classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API_URL}?action=getBackupList&pin=${encodeURIComponent(USER_PIN)}`, {
+          method: 'GET',
+          redirect: 'follow'
+        });
+        const data = await res.json();
+        if (data.status !== 'success') {
+          throw new Error(data.message || 'Gagal memuat daftar backup.');
+        }
+
+        BACKUP_FILES_CACHE = data.backups || [];
+        if (BACKUP_FILES_CACHE.length === 0) {
+          sel.innerHTML = `<option value="" selected disabled>Belum ada file backup ditemukan di Google Drive.</option>`;
+          return;
+        }
+
+        sel.innerHTML = `<option value="" selected disabled>-- Pilih File Backup (${BACKUP_FILES_CACHE.length} tersedia) --</option>`;
+        BACKUP_FILES_CACHE.forEach(b => {
+          let tglLabel = '';
+          if (b.createdTime) {
+            const d = new Date(b.createdTime);
+            if (!isNaN(d)) {
+              tglLabel = ` (${d.toLocaleDateString('id-ID')} ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })})`;
+            }
+          }
+          sel.innerHTML += `<option value="${b.id}">${b.name}${tglLabel}</option>`;
+        });
+      } catch (err) {
+        sel.innerHTML = `<option value="" selected disabled>Gagal memuat daftar backup.</option>`;
+        alert('Gagal memuat daftar backup: ' + (err.message || err));
+      }
+    }
+
+    function toggleOpenBackupLink() {
+      const id = document.getElementById('restore-file-select').value;
+      const linkPreview = document.getElementById('link-preview-backup');
+      const found = BACKUP_FILES_CACHE.find(b => b.id === id);
+      if (found && found.url) {
+        linkPreview.href = found.url;
+        linkPreview.classList.remove('hidden');
+      } else {
+        linkPreview.classList.add('hidden');
+      }
+    }
+
+    async function executeRestoreBackup() {
+      const backupId = document.getElementById('restore-file-select').value;
+      if (!backupId) {
+        return alert('Silakan muat dan pilih file backup terlebih dahulu!');
+      }
+
+      const targets = Array.from(document.querySelectorAll('.restore-chk:checked')).map(el => el.value);
+      if (targets.length === 0) {
+        return alert('Pilih minimal satu tabel yang ingin dipulihkan!');
+      }
+
+      const foundFile = BACKUP_FILES_CACHE.find(b => b.id === backupId);
+      const fileName = foundFile ? foundFile.name : backupId;
+      const safetyBackup = document.getElementById('restore-safety-backup').checked;
+
+      const konfirmasi = confirm(
+        `KONFIRMASI PEMULIHAN BACKUP:\n\n` +
+        `File Sumber: ${fileName}\n` +
+        `Tabel Dipulihkan: ${targets.join(', ')}\n\n` +
+        `Data aktif saat ini pada tabel yang dipilih akan digantikan dengan isi dari file backup tersebut. Lanjutkan?`
+      );
+      if (!konfirmasi) return;
+
+      const btn = document.getElementById('btn-execute-restore');
+      const resBox = document.getElementById('restore-result-box');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MEMULIHKAN DATA DARI BACKUP...';
+      resBox.style.display = 'none';
+
+      try {
+        const result = await postToDrive({
+          action: 'restoreBackupData',
+          backupId: backupId,
+          targets: targets,
+          safetyBackup: safetyBackup
+        });
+
+        let safetyHtml = '';
+        if (result.safetyUrl) {
+          safetyHtml = `<br><i class="fa-solid fa-shield-halved"></i> Backup pengaman sebelum restore: <a href="${result.safetyUrl}" target="_blank" style="color:#0369a1; font-weight:700; text-decoration:underline;">${result.safetyName}</a>`;
+        }
+
+        resBox.style.display = 'block';
+        resBox.innerHTML = `
+          <div style="background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; padding:12px; border-radius:10px;">
+            <strong><i class="fa-solid fa-circle-check"></i> Data berhasil dipulihkan!</strong><br>
+            Rincian: <code>${(result.restored || targets).join(', ')}</code>
+            ${safetyHtml}
+          </div>
+        `;
+
+        // Muat ulang seluruh data aplikasi agar tampilan langsung diperbarui
+        await initDatabase(USER_PIN, true);
+      } catch (err) {
+        alert('Gagal memulihkan backup: ' + (err.message || err));
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> PULIHKAN DATA DARI BACKUP TERPILIH';
+      }
+    }
   </script>
 </body>
 </html>
